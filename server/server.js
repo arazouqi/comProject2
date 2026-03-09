@@ -18,23 +18,50 @@ app.use(session({
 }))
 
 app.post('/login', (req, res) => {
-    console.log(req.body)
     const { username, password } = req.body
 
     if (username == "admin") {
         req.session.user = username;
-        res.redirect("/dashboard")
+        req.session.role = "admin";
+
+        res.redirect("/admindashboard")
+    } else if (username == "teacher") {
+        req.session.user = username;
+        req.session.role = "teacher";
+
+        res.redirect("/teacherdashboard")
+    } else if (username == "student") {
+        req.session.user = username;
+        req.session.role = "student";
+
+        res.redirect("/studentdashboard")
     } else {
         res.send("Invalid login")
     }
 })
 
-app.get("/dashboard", (req, res) => {
-    if (!req.session.user) {
-        return res.redirect("/login.html")
+app.get("/admindashboard", (req, res) => {
+    if ((!req.session.user) || (req.session.role !== "admin")) {
+        return res.redirect("/signin.html")
     }
 
-    res.sendFile(path.join(__dirname, "../website/frontend/dashboard.html"))
+    res.sendFile(path.join(__dirname, "../website/frontend/admindashboard.html"))
+})
+
+app.get("/teacherdashboard", (req, res) => {
+    if ((!req.session.user) || (req.session.role !== "teacher")) {
+        return res.redirect("/signin.html")
+    }
+
+    res.sendFile(path.join(__dirname, "../website/frontend/teacherdashboard.html"))
+})
+
+app.get("/studentdashboard", (req, res) => {
+    if ((!req.session.user) || (req.session.role !== "student")) {
+        return res.redirect("/signin.html")
+    }
+
+    res.sendFile(path.join(__dirname, "../website/frontend/studentdashboard.html"))
 })
 
 app.listen(port, () => {
