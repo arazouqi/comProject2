@@ -1,15 +1,52 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <link rel="stylesheet" href="styles.css">
-        <title>Seats 2</title>
-    </head>
+  <head>
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  
+  <body>
+    <div class="dashboard">
+      <h1>Events Calendar</h1>
+      <button onclick="openCreate()" class="primary-btn">Create Event</button>
+      <div id="calendar" class="calendar"></div>
+    </div>
+    <script>
+      async function loadEvents() {
+        const res = await fetch("/events")
+        const events = await res.json()
+        const cal = document.getElementById("calendar")
+        cal.innerHTML = ""
+        events.forEach(e => {
+          const card = document.createElement("div")
+          card.className = "event-card"
+          card.innerHTML = `
 
-    <body>
-        <a>View Calendar</a><br>
-        <a href="qrgen.html">Create Event</a><br>
-        <a>View Event</a><br>
-        <a>Delete Event</a><br>
-        <a>Modify Event</a>
-    </body>
+				<h3>${e.name}</h3>
+				<p>${new Date(e.startTime).toLocaleString()}</p>
+				<button onclick="modify('${e._id}')">Modify</button>
+				<button onclick="deleteEvent('${e._id}')">Delete</button>
+				<button onclick="qr('${e._id}')">QR</button>
+`
+          cal.appendChild(card)
+        })
+      }
+      async function deleteEvent(id) {
+        if (confirm("Delete event?")) {
+          await fetch("/events/" + id, {
+            method: "DELETE"
+          })
+          loadEvents()
+        }
+      }
+      async function qr(id) {
+        const res = await fetch("/events/" + id + "/qr", {
+          method: "POST"
+        })
+        const data = await res.json()
+        alert("QR Code: " + data.code)
+      }
+      loadEvents()
+    </script>
+  </body>
 </html>

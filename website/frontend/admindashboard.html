@@ -1,15 +1,149 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Admin Dashboard</title>
         <link rel="stylesheet" href="styles.css">
-        <title>Seats 2</title>
     </head>
 
     <body>
-        <a>Create User</a><br>
-        <a>Delete User</a><br>
-        <a>Modify User</a><br>
-        <a>View Users</a><br>
-        <a>View User Calendar</a>
+        <div class="dashboard">
+            <h1>Admin Panel</h1>
+
+            <div class="controls">
+                <input id="search" placeholder="Search by name">
+                <a href="/createuserpage.html" class="primary-btn">Create User</a>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users"></tbody>
+            </table>
+
+            <div class="pagination">
+                <button onclick="prevPage()">Prev</button>
+                <span id="page"></span>
+                <button onclick="nextPage()">Next</button>
+            </div>
+        </div>
+
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <h2>Edit User</h2>
+                    <input id="editName">
+                    <input id="editEmail" readonly>
+
+                    <select id="editRole">
+                        <option>student</option>
+                        <option>teacher</option>
+                        <option>admin</option>
+                    </select>
+
+                    <button onclick="saveUser()" class="primary-btn">Save</button>
+            </div>
+        </div>
+
+        <script>
+            let users=[]
+            let page=0
+            const pageSize=10
+
+            async function loadUsers(){
+                const res=await fetch("/users")
+                users=await res.json()
+                render()
+            }
+
+            function render(){
+                const body=document.getElementById("users")
+                body.innerHTML=""
+
+                const start=page*pageSize
+                const data=users.slice(start,start+pageSize)
+
+                data.forEach(u=>{
+                    const row=document.createElement("tr")
+                    row.innerHTML=`
+                    <td>${u.name}</td>
+                    <td>${u.email}</td>
+                    <td>${u.role}</td>
+
+                    <td>
+                        <button onclick="openModal('${u.email}')">Modify</button>
+                        <button onclick="confirmDelete(this,'${u.email}')">Delete</button>
+                    </td>
+                    `
+                    body.appendChild(row)
+                })
+
+                document.getElementById("page").innerText=`Page ${page+1}`
+            }
+
+            function nextPage(){
+                page++
+                render()
+            }
+
+            function prevPage(){
+                if(page>0) page--
+                render()
+            }
+
+            document.getElementById("search").oninput=e=>{
+                const q=e.target.value.toLowerCase()
+                const filtered=users.filter(u=>u.name.toLowerCase().includes(q))
+
+                users=filtered
+                page=0
+                render()
+            }
+
+            async function confirmDelete(btn,email){
+                if(btn.innerText==="Confirm"){
+                    await fetch("/deleteuser/"+email, { 
+                        method: "POST"
+                    })
+                    loadUsers()
+                }else{
+                    btn.innerText="Confirm"
+                }
+            }
+
+            async function openModal(email){
+                const res=await fetch("/getuser/"+email, { 
+                    method: "GET"
+                })
+                const user=await res.json()
+
+                document.getElementById("editName").value=user.name
+                document.getElementById("editEmail").value=user.email
+                document.getElementById("editRole").value=user.role
+                document.getElementById("modal").style.display="flex"
+            }
+
+            async function saveUser(){
+                const name=document.getElementById("editName").value
+                const email=document.getElementById("editEmail").value
+                const role=document.getElementById("editRole").value
+
+                await fetch("/updateuser", {
+                    method:"POST",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({name,role})
+                })
+
+                document.getElementById("modal").style.display="none"
+
+                loadUsers()
+            }
+
+            loadUsers()
+        </script>
     </body>
 </html>

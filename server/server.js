@@ -2,9 +2,26 @@ const session = require("express-session")
 const express = require("express")
 const cors = require("cors")
 const path = require("path")
+const mongoose = require("mongoose")
+
+const Users = require('./schemas/userSchema')
+const Event=require("./schemas/eventSchema")
 
 const app = express()
 const port = 3000
+const uri = "mongodb+srv://server:cRJjbrmAXke5Og1u@cluster0.kfgtefg.mongodb.net/?appName=Cluster0"
+
+async function start() {
+    try {
+        mongoose.connect(uri)
+        
+        console.log("Successfully connected to MongoDB.")
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+start().catch(console.dir)
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -17,26 +34,135 @@ app.use(session({
     saveUninitialized: true
 }))
 
-app.post('/login', (req, res) => {
-    const { username, password } = req.body
+app.post('/createuser', async (req, res) => {
+    const { name, email, password, role } = req.body
 
-    if (username == "admin") {
-        req.session.user = username;
+    try {
+        await Users.create({
+            name,
+            email,
+            password,
+            role,
+            classes: {}
+        })
+
+        res.redirect("/createuserpage.html?message=User created&status=success")
+    } catch (err) {
+        console.log(err)
+        res.redirect("/createuserpage.html?message=Error creating user&status=error")
+    }
+})
+
+app.post('/login', (req, res) => {
+    const { email, password } = req.body
+
+    if (email == "admin") {
+        req.session.user = email;
         req.session.role = "admin";
 
         res.redirect("/admindashboard")
-    } else if (username == "teacher") {
-        req.session.user = username;
+    } else if (email == "teacher") {
+        req.session.user = email;
         req.session.role = "teacher";
 
         res.redirect("/teacherdashboard")
-    } else if (username == "student") {
-        req.session.user = username;
+    } else if (email == "student") {
+        req.session.user = email;
         req.session.role = "student";
 
         res.redirect("/studentdashboard")
     } else {
         res.send("Invalid login")
+    }
+})
+
+app.post("/deleteuser/:email", async (req, res) => {
+    const { email } = req.params
+
+    try {
+        await Users.findOneAndDelete({ email })
+
+        res.redirect("/deleteuserpage.html?message=User deleted successfully&status=success")
+    } catch (err) {
+        res.redirect("/deleteuserpage.html?message=Error deleting user&status=fail")
+    }
+})
+
+app.post("/events", async (req,res) => {
+    const event=await Event.create(req.body)
+    res.json(event)
+})
+
+app.get("/events", async (req,res) => {
+    const events=await Event.find()
+    res.json(events)
+})
+
+app.patch("/events/:id", async (req,res) => {
+    await Event.findByIdAndUpdate(req.params.id,req.body)
+    res.send("updated")
+})
+
+app.delete("/events/:id", async (req,res) => {
+    await Event.findByIdAndDelete(req.params.id)
+    res.send("deleted")
+})
+
+app.post("/events/:id/qr", async (req,res) => {
+    const code=Math.floor(100000+Math.random()*900000)
+    await Event.findByIdAndUpdate(req.params.id,{qrCode:code})
+    res.json({code})
+})
+
+app.post("/checkin", async (req,res) => {
+    const {code,email}=req.body
+    const event=await Event.findOne({qrCode:code})
+
+    if(!event) return res.send("Invalid code")
+
+    event.attendees.push(email)
+    await event.save()
+    res.send("Checked in")
+})
+
+app.post("/updateuser", async (req, res) => {
+    console.log(req.query.email, req.body)
+    const { email } = req.query
+    const { name, role } = req.body
+
+    try {
+        await Users.findOneAndUpdate(
+            { email },
+            { name, role }
+        )
+
+        res.redirect("/modifyuserpage.html?message=User updated&status=success")
+    } catch (err) {
+        console.log(err)
+        res.redirect("/modifyuserpage.html?message=Error updating user&status=error")
+    }
+})
+
+app.get("/getuser/:email", async (req, res) => {
+    const { email } = req.params
+
+    try {
+        const user = await Users.findOne({ email })
+
+        res.json(user)
+    } catch (err) {
+        console.log(err)
+        res.status(500).send("Error")
+    }
+})
+
+app.get("/users", async (req, res) => {
+    try {
+        const users = await Users.find().select("name email role")
+        res.json(users)
+    } catch (err) {
+        console.log(err)
+        res.status(500).send("Error fetching users")
     }
 })
 
