@@ -7,8 +7,11 @@ type UserRole = "student" | "teacher" | "admin";
 
 type EventItem = {
   id: number;
-  title: string;
-  date: string;
+  name: string;
+  location: string;
+  startTime: string;
+  endTime: string;
+  classGroup: string;
   teacher: string;
 };
 
@@ -19,6 +22,7 @@ type Props = {
         id: number;
         username: string;
         role: UserRole;
+        classGroup: string;
       };
     };
   };
@@ -38,6 +42,11 @@ export function UserCalendarScreen({ route }: Props) {
       if (user.role === "teacher") {
         const filtered = data.filter(
           (event: EventItem) => event.teacher === user.username
+        );
+        setEvents(filtered);
+      } else if (user.role === "student") {
+        const filtered = data.filter(
+          (event: EventItem) => event.classGroup === user.classGroup
         );
         setEvents(filtered);
       } else {
@@ -65,10 +74,8 @@ export function UserCalendarScreen({ route }: Props) {
 
       {loading ? (
         <Text>Loading calendar...</Text>
-      ) : user.role !== "teacher" ? (
-        <Text>
-          Calendar view is currently only available for teacher accounts.
-        </Text>
+      ) : user.role === "admin" ? (
+        <Text>Calendar view is not used for admin accounts in this MVP.</Text>
       ) : events.length === 0 ? (
         <Text>No events found for this user.</Text>
       ) : (
@@ -84,8 +91,11 @@ export function UserCalendarScreen({ route }: Props) {
                 marginBottom: 12
               }}
             >
-              <Text style={{ fontWeight: "700" }}>{item.title}</Text>
-              <Text>Date: {item.date}</Text>
+              <Text style={{ fontWeight: "700" }}>{item.name}</Text>
+              <Text>Location: {item.location}</Text>
+              <Text>Start: {item.startTime}</Text>
+              <Text>End: {item.endTime}</Text>
+              <Text>Class Group: {item.classGroup}</Text>
               <Text>Teacher: {item.teacher}</Text>
             </View>
           )}
