@@ -27,32 +27,48 @@ type RootStackParamList = {
   CreateEvent: undefined;
   EditEvent: {
     event: {
-      id: number;
-      title: string;
-      date: string;
-      teacher: string;
-    };
+     id: number;
+     name: string;
+      location: string;
+     startTime: string;
+     endTime: string;
+     classGroup: string;
+     teacher: string;
+   };
   };
   TeacherCalendar: {
     teacher: string;
   };
   AdminUsers: undefined;
-   EditUser: {
-   user: {
-     id: number;
-     username: string;
-      role: "student" | "teacher" | "admin";
-    };
-  };
-  UserCalendar: {
+
+  EditUser: {
    user: {
       id: number;
+     username: string;
+     name: string;
+      email: string;
+      password: string;
+      role: "student" | "teacher" | "admin";
+     classGroup: string;
+     attendance: string[];
+     calendar: string[];
+   };
+  };
+
+  UserCalendar: {
+    user: {
+      id: number;
       username: string;
-     role: "student" | "teacher" | "admin";
+      name: string;
+      email: string;
+      password: string;
+      role: "student" | "teacher" | "admin";
+      classGroup: string;
+      attendance: string[];
+      alendar: string[];
     };
   };
-};
-
+}
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {

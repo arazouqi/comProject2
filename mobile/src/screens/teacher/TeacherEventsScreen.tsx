@@ -5,8 +5,11 @@ import { API_BASE_URL } from "../../services/api";
 
 type EventItem = {
   id: number;
-  title: string;
-  date: string;
+  name: string;
+  location: string;
+  startTime: string;
+  endTime: string;
+  classGroup: string;
   teacher: string;
 };
 
@@ -76,8 +79,11 @@ export function TeacherEventsScreen({ navigation }: Props) {
                 gap: 8
               }}
             >
-              <Text style={{ fontWeight: "700" }}>{item.title}</Text>
-              <Text>Date: {item.date}</Text>
+              <Text style={{ fontWeight: "700" }}>{item.name}</Text>
+              <Text>Location: {item.location}</Text>
+              <Text>Start: {item.startTime}</Text>
+              <Text>End: {item.endTime}</Text>
+              <Text>Class Group: {item.classGroup}</Text>
               <Text>Teacher: {item.teacher}</Text>
 
               <Button
