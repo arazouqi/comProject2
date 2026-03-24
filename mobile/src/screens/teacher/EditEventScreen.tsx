@@ -8,7 +8,7 @@ type Props = {
   route: {
     params: {
       event: {
-        id: number;
+        id: string;
         name: string;
         location: string;
         startTime: string;

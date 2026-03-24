@@ -27,7 +27,7 @@ type RootStackParamList = {
   CreateEvent: undefined;
   EditEvent: {
     event: {
-     id: number;
+     id: string;
      name: string;
       location: string;
      startTime: string;
@@ -43,7 +43,7 @@ type RootStackParamList = {
 
   EditUser: {
    user: {
-      id: number;
+      id: string;
      username: string;
      name: string;
       email: string;
@@ -57,7 +57,7 @@ type RootStackParamList = {
 
   UserCalendar: {
     user: {
-      id: number;
+      id: string;
       username: string;
       name: string;
       email: string;
@@ -172,11 +172,9 @@ export default function App() {
              options={{ title: "Edit User" }}
              component={EditUserScreen}
             />
-            <Stack.Screen
-              name="UserCalendar"
-              options={{ title: "User Calendar" }}
-              component={UserCalendarScreen}
-            />
+            <Stack.Screen name="UserCalendar" options={{ title: "User Calendar" }}>
+             {({ route }) => <UserCalendarScreen route={route as any} />}
+            </Stack.Screen>
           </>
         )}
       </Stack.Navigator>

@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../../services/api";
 type UserRole = "student" | "teacher" | "admin";
 
 type EventItem = {
-  id: number;
+  id: string;
   name: string;
   location: string;
   startTime: string;

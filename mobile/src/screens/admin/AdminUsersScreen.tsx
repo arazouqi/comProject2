@@ -8,7 +8,7 @@ import { API_BASE_URL } from "../../services/api";
 type UserRole = "student" | "teacher" | "admin";
 
 type UserItem = {
-  id: number;
+  id: string;
   username: string;
   name: string;
   email: string;
@@ -95,7 +95,7 @@ export function AdminUsersScreen({ navigation }: Props) {
     }
   }
 
-  async function handleDeleteUser(id: number) {
+  async function handleDeleteUser(id: string) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
         method: "DELETE"
