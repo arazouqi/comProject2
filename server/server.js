@@ -45,11 +45,8 @@ app.post('/createuser', async (req, res) => {
             role,
             classes: {}
         })
-
-        res.redirect("/createuserpage.html?message=User created&status=success")
     } catch (err) {
         console.log(err)
-        res.redirect("/createuserpage.html?message=Error creating user&status=error")
     }
 })
 
@@ -81,14 +78,12 @@ app.post("/deleteuser/:email", async (req, res) => {
 
     try {
         await Users.findOneAndDelete({ email })
-
-        res.redirect("/deleteuserpage.html?message=User deleted successfully&status=success")
     } catch (err) {
-        res.redirect("/deleteuserpage.html?message=Error deleting user&status=fail")
+        console.log(err)
     }
 })
 
-app.post("/events", async (req,res) => {
+app.post("/createevent", async (req,res) => {
     const event=await Event.create(req.body)
     res.json(event)
 })
@@ -133,11 +128,8 @@ app.post("/updateuser", async (req, res) => {
             { email },
             { name, role }
         )
-
-        res.redirect("/modifyuserpage.html?message=User updated&status=success")
     } catch (err) {
         console.log(err)
-        res.redirect("/modifyuserpage.html?message=Error updating user&status=error")
     }
 })
 
