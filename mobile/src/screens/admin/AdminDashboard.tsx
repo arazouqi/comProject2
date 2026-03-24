@@ -4,9 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
   onSignOut: () => void;
+  onManageUsers: () => void;
 };
 
-export function AdminDashboard({ onSignOut }: Props) {
+export function AdminDashboard({ onSignOut, onManageUsers }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
       <Text style={{ fontSize: 24, fontWeight: "700", marginBottom: 16 }}>
@@ -14,11 +15,7 @@ export function AdminDashboard({ onSignOut }: Props) {
       </Text>
 
       <View style={{ gap: 12 }}>
-        <Button title="Create User" onPress={() => {}} />
-        <Button title="Delete User" onPress={() => {}} />
-        <Button title="Modify User" onPress={() => {}} />
-        <Button title="View Users" onPress={() => {}} />
-        <Button title="View User Calendar" onPress={() => {}} />
+        <Button title="Manage Users" onPress={onManageUsers} />
         <Button title="Sign Out" onPress={onSignOut} />
       </View>
     </SafeAreaView>
