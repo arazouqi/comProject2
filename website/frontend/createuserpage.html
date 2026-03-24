@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+
+    <body>
+        <h2>Create User</h2>
+
+        <p id="message"></p>
+
+        <form method="POST" action="/createuser">
+            <input name="name" placeholder="Name" required><br>
+            <input name="email" placeholder="Email" required><br>
+            <input type="password" name="password" placeholder="Password" required><br>
+
+            <select name="role" required>
+                <option value="">Select role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+            </select><br><br>
+
+            <button type="submit">Create User</button>
+        </form>
+
+        <a href="/admindashboard">Back</a>
+
+        <script>
+            const params = new URLSearchParams(window.location.search)
+            const messageText = params.get("message")
+            const status = params.get("status")
+
+            const message = document.getElementById("message")
+
+            if (messageText) {
+                message.textContent = messageText
+
+                if (status === "success") message.style.color = "green"
+                if (status === "error") message.style.color = "red"
+            }
+        </script>
+    </body>
+</html>

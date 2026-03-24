@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+
+    <body>
+        <h2>Modify User</h2>
+
+        <p id="message"></p>
+
+        <input id="searchEmail" placeholder="Enter user email">
+        <button onclick="loadUser()">Load User</button>
+
+        <hr>
+
+        <form id="editForm" method="POST" style="display:none;">
+            <input id="name" name="name" placeholder="Name"><br>
+            <input id="email" name="email" readonly><br>
+
+            <select id="role" name="role">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+            </select><br><br>
+
+            <button type="submit">Update User</button>
+        </form>
+
+        <a href="/admindashboard">Back</a>
+
+        <script>
+            const params = new URLSearchParams(window.location.search)
+            const messageText = params.get("message")
+            const status = params.get("status")
+
+            const message = document.getElementById("message")
+
+            if (messageText) {
+                message.textContent = messageText
+
+                if (status === "success") message.style.color = "green"
+                if (status === "error") message.style.color = "red"
+            }
+
+            async function loadUser() {
+                const email = document.getElementById("searchEmail").value
+
+                const res = await fetch(`/modifyuser?email=${email}`)
+                const user = await res.json()
+
+                if (!user) {
+                    message.textContent = "User not found"
+                    message.style.color = "red"
+                    return
+                }
+
+                document.getElementById("editForm").style.display = "block"
+
+                document.getElementById("name").value = user.name
+                document.getElementById("email").value = user.email
+                document.getElementById("role").value = user.role
+
+                // set form action dynamically
+                document.getElementById("editForm").action = `/updateuser?email=${user.email}`
+            }
+        </script>
+    </body>
+</html>
