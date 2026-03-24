@@ -11,7 +11,7 @@
 
             <div class="controls">
                 <input id="search" placeholder="Search by name">
-                <a href="/createuserpage.html" class="primary-btn">Create User</a>
+                <button class="primary-btn" onclick="openCreateModal()">Create User</button>
             </div>
 
             <table>
@@ -46,6 +46,24 @@
                     </select>
 
                     <button onclick="saveUser()" class="primary-btn">Save</button>
+            </div>
+        </div>
+
+        <div id="modal-create" class="modal">
+            <div class="modal-content">
+                <h2>Create User</h2>
+                    <input id="name" name="name" placeholder="Name" required><br>
+                    <input id="email" name="email" placeholder="Email" required><br>
+                    <input id="password" type="password" name="password" placeholder="Password" required><br>
+
+                    <select id="role" name="role" required>
+                        <option value="">Select role</option>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="admin">Admin</option>
+                    </select><br><br>
+
+                    <button onclick="createUser()" class="primary-btn">Create</button>
             </div>
         </div>
 
@@ -127,6 +145,10 @@
                 document.getElementById("modal").style.display="flex"
             }
 
+            function openCreateModal() {
+                document.getElementById("modal-create").style.display = "flex"
+            }
+
             async function saveUser(){
                 const name=document.getElementById("editName").value
                 const email=document.getElementById("editEmail").value
@@ -135,10 +157,27 @@
                 await fetch("/updateuser", {
                     method:"POST",
                     headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({name,role})
+                    body:JSON.stringify({email, name, role})
                 })
 
                 document.getElementById("modal").style.display="none"
+
+                loadUsers()
+            }
+
+            async function createUser() {
+                const name = document.getElementById("name").value
+                const email = document.getElementById("email").value
+                const password = document.getElementById("password").value
+                const role = document.getElementById("role").value
+
+                await fetch("/createuser", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, name, password, role })
+                })
+
+                document.getElementById("modal-create").style.display = "none"
 
                 loadUsers()
             }

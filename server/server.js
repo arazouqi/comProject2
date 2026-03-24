@@ -161,21 +161,26 @@ app.post("/updateuser", async (req, res) => {
         const update = {}
 
         if (name) update.name = name
+
         if (role) {
             if (!allowedRoles.includes(role)) {
                 return res.redirect("/modifyuserpage.html?message=Invalid role&status=error")
             }
             update.role = role
         }
+
         if (classGroup) {
             const normalizedClassGroup = normalizeClassGroup(classGroup)
+
             if (normalizedClassGroup !== "none" && !allowedClassGroups.includes(normalizedClassGroup)) {
                 return res.redirect("/modifyuserpage.html?message=Invalid class group&status=error")
             }
+
             update.classGroup = normalizedClassGroup
         }
 
         await Users.findOneAndUpdate({ email }, update)
+
         res.redirect("/modifyuserpage.html?message=User updated&status=success")
     } catch (err) {
         console.log(err)
