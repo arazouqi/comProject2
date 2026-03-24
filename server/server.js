@@ -126,9 +126,7 @@ app.post("/checkin", async (req,res) => {
 })
 
 app.post("/updateuser", async (req, res) => {
-    console.log(req.query.email, req.body)
-    const { email } = req.query
-    const { name, role } = req.body
+    const { email, name, role } = req.body
 
     try {
         await Users.findOneAndUpdate(
