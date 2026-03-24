@@ -133,11 +133,8 @@ app.post("/createuser", async (req, res) => {
             attendance: [],
             calendar: []
         })
-
-        res.redirect("/createuserpage.html?message=User created&status=success")
     } catch (err) {
         console.log(err)
-        res.redirect("/createuserpage.html?message=Error creating user&status=error")
     }
 })
 
@@ -146,11 +143,46 @@ app.post("/deleteuser/:email", async (req, res) => {
 
     try {
         await Users.findOneAndDelete({ email })
-        res.redirect("/deleteuserpage.html?message=User deleted successfully&status=success")
     } catch (err) {
         console.log(err)
-        res.redirect("/deleteuserpage.html?message=Error deleting user&status=fail")
     }
+})
+
+app.post("/createevent", async (req,res) => {
+    const event=await Event.create(req.body)
+    res.json(event)
+})
+
+app.get("/events", async (req,res) => {
+    const events=await Event.find()
+    res.json(events)
+})
+
+app.patch("/events/:id", async (req,res) => {
+    await Event.findByIdAndUpdate(req.params.id,req.body)
+    res.send("updated")
+})
+
+app.delete("/events/:id", async (req,res) => {
+    await Event.findByIdAndDelete(req.params.id)
+    res.send("deleted")
+})
+
+app.post("/events/:id/qr", async (req,res) => {
+    const code=Math.floor(100000+Math.random()*900000)
+    await Event.findByIdAndUpdate(req.params.id,{qrCode:code})
+    res.json({code})
+})
+
+app.post("/checkin", async (req,res) => {
+    const {code,email}=req.body
+    const event=await Event.findOne({qrCode:code})
+
+    if(!event) return res.send("Invalid code")
+
+    event.attendees.push(email)
+    await event.save()
+    res.send("Checked in")
 })
 
 app.post("/updateuser", async (req, res) => {
@@ -158,33 +190,12 @@ app.post("/updateuser", async (req, res) => {
     const { name, role, classGroup } = req.body
 
     try {
-        const update = {}
-
-        if (name) update.name = name
-
-        if (role) {
-            if (!allowedRoles.includes(role)) {
-                return res.redirect("/modifyuserpage.html?message=Invalid role&status=error")
-            }
-            update.role = role
-        }
-
-        if (classGroup) {
-            const normalizedClassGroup = normalizeClassGroup(classGroup)
-
-            if (normalizedClassGroup !== "none" && !allowedClassGroups.includes(normalizedClassGroup)) {
-                return res.redirect("/modifyuserpage.html?message=Invalid class group&status=error")
-            }
-
-            update.classGroup = normalizedClassGroup
-        }
-
-        await Users.findOneAndUpdate({ email }, update)
-
-        res.redirect("/modifyuserpage.html?message=User updated&status=success")
+        await Users.findOneAndUpdate(
+            { email },
+            { name, role }
+        )
     } catch (err) {
         console.log(err)
-        res.redirect("/modifyuserpage.html?message=Error updating user&status=error")
     }
 })
 

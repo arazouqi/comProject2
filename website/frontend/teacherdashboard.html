@@ -4,49 +4,123 @@
     <title>Teacher Dashboard</title>
     <link rel="stylesheet" href="styles.css">
   </head>
-  
+
   <body>
     <div class="dashboard">
       <h1>Events Calendar</h1>
       <button onclick="openCreate()" class="primary-btn">Create Event</button>
       <div id="calendar" class="calendar"></div>
     </div>
-    <script>
-      async function loadEvents() {
-        const res = await fetch("/events")
-        const events = await res.json()
-        const cal = document.getElementById("calendar")
-        cal.innerHTML = ""
-        events.forEach(e => {
-          const card = document.createElement("div")
-          card.className = "event-card"
-          card.innerHTML = `
 
-				<h3>${e.name}</h3>
-				<p>${new Date(e.startTime).toLocaleString()}</p>
-				<button onclick="modify('${e._id}')">Modify</button>
-				<button onclick="deleteEvent('${e._id}')">Delete</button>
-				<button onclick="qr('${e._id}')">QR</button>
-`
-          cal.appendChild(card)
-        })
-      }
-      async function deleteEvent(id) {
-        if (confirm("Delete event?")) {
-          await fetch("/events/" + id, {
-            method: "DELETE"
-          })
-          loadEvents()
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Edit User</h2>
+                <input id="editName">
+                <input id="editEmail" readonly>
+
+                <select id="editRole">
+                    <option>student</option>
+                    <option>teacher</option>
+                    <option>admin</option>
+                </select>
+
+                <button onclick="saveUser()" class="primary-btn">Save</button>
+        </div>
+    </div>
+
+    <div id="modal-create" class="modal">
+        <div class="modal-content">
+            <h2>Create Event</h2>
+            <input id="name" name="name" placeholder="Name" required><br>
+            <input id="location" name="location" placeholder="Location" required><br>
+            <input id="start-time" type="date" name="start-time" placeholder="Start Time" required><br>
+            <input id="end-time" type="date" name="end-time" placeholder="End Time" required><br>
+            <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
+
+            <button onclick="createCalendarEvent()" class="primary-btn">Create</button>
+        </div>
+    </div>
+
+    <div id="modal-qr" class="modal">
+        <div class="modal-content">
+            <h2>QR Code</h2>
+            <img id="qrImage" />
+
+            <button onclick="closeQrModal()" class="primary-btn">Close</button>
+        </div>
+    </div>
+
+    <script>
+        async function loadEvents() {
+            const res = await fetch("/events")
+            const events = await res.json()
+            const cal = document.getElementById("calendar")
+            cal.innerHTML = ""
+            events.forEach(e => {
+                const card = document.createElement("div")
+                card.className = "event-card"
+                card.innerHTML = `
+                    <h3>${e.name}</h3>
+                    <p>${new Date(e.startTime).toLocaleString()}-${new Date(e.endTime).toLocaleString()}</p>
+                    <button onclick="modify('${e._id}')">Modify</button>
+                    <button onclick="deleteEvent(this, '${e._id}')">Delete</button>
+                    <button onclick="qr('${e._id}')">QR</button>
+                `
+                cal.appendChild(card)
+            })
         }
-      }
-      async function qr(id) {
-        const res = await fetch("/events/" + id + "/qr", {
-          method: "POST"
-        })
-        const data = await res.json()
-        alert("QR Code: " + data.code)
-      }
-      loadEvents()
+        
+        async function deleteEvent(btn,id) {
+            if (btn.innerText==="Confirm") {
+                await fetch("/events/"+id, { 
+                    method: "DELETE"
+                })
+                loadEvents()
+            } else {
+                btn.innerText="Confirm"
+            }
+        }
+
+        async function qr(id) {
+            const res = await fetch("/events/" + id + "/qr", {
+                method: "POST"
+            })
+
+            const data = await res.json()
+            const qrImage = document.getElementById("qrImage")
+
+            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${data.code}`
+
+            document.getElementById("modal-qr").style.display = "flex"
+        }
+
+        function closeQrModal() {
+            document.getElementById("modal-qr").style.display = "none"
+        }
+
+        function openCreate() {
+            document.getElementById("modal-create").style.display = "flex"
+        }
+
+        async function createCalendarEvent() {
+            const name = document.getElementById("name").value
+            const location = document.getElementById("location").value
+            const startTime = document.getElementById("start-time").value
+            const endTime = document.getElementById("end-time").value
+            const classGroup = document.getElementById("classgroup").value
+
+            await fetch("/createevent", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, location, startTime, endTime, classGroup })
+            })
+
+            document.getElementById("modal-create").style.display = "none"
+
+            loadEvents()
+        }
+
+        loadEvents()
     </script>
   </body>
 </html>
