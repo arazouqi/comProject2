@@ -15,13 +15,14 @@
     <div id="modal" class="modal">
         <div class="modal-content">
             <h2>Edit Event</h2>
-            <input id="name" name="name" placeholder="Name" required><br>
-            <input id="location" name="location" placeholder="Location" required><br>
-            <input id="start-time" type="date" name="start-time" placeholder="Start Time" required><br>
-            <input id="end-time" type="date" name="end-time" placeholder="End Time" required><br>
-            <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
+            <input id="id" name="id" readonly><br>
+            <input id="editName" name="name" required><br>
+            <input id="editLocation" name="location" required><br>
+            <input id="edit-start-time" type="date" name="start-time" required><br>
+            <input id="edit-end-time" type="date" name="end-time" required><br>
+            <input id="editClassgroup" type="string" name="classgroup" required><br>
 
-            <button onclick="editCalendarEvent()" class="primary-btn">Modify</button>
+            <button onclick="updateCalendarEvent()" class="primary-btn">Modify</button>
         </div>
     </div>
 
@@ -33,6 +34,7 @@
             <input id="start-time" type="date" name="start-time" placeholder="Start Time" required><br>
             <input id="end-time" type="date" name="end-time" placeholder="End Time" required><br>
             <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
+            <input id="teacher" type="string" name="teacher" placeholder="Teacher" required><br>
 
             <button onclick="createCalendarEvent()" class="primary-btn">Create</button>
         </div>
@@ -49,7 +51,7 @@
 
     <script>
         async function loadEvents() {
-            const res = await fetch("/events")
+            const res = await fetch("/api/events/", { method: "GET" })
             const events = await res.json()
             const cal = document.getElementById("calendar")
             cal.innerHTML = ""
@@ -59,9 +61,9 @@
                 card.innerHTML = `
                     <h3>${e.name}</h3>
                     <p>${new Date(e.startTime).toLocaleString()}-${new Date(e.endTime).toLocaleString()}</p>
-                    <button onclick="openModify('${e._id}')">Modify</button>
-                    <button onclick="deleteEvent(this, '${e._id}')">Delete</button>
-                    <button onclick="qr('${e._id}')">QR</button>
+                    <button onclick="openModify('${e.id}')">Modify</button>
+                    <button onclick="deleteEvent(this, '${e.id}')">Delete</button>
+                    <button onclick="qr('${e.id}')">QR</button>
                 `
                 cal.appendChild(card)
             })
@@ -69,7 +71,7 @@
         
         async function deleteEvent(btn,id) {
             if (btn.innerText==="Confirm") {
-                await fetch("/events/"+id, { 
+                await fetch("/api/events/" + id, { 
                     method: "DELETE"
                 })
                 loadEvents()
@@ -79,7 +81,7 @@
         }
 
         async function qr(id) {
-            const res = await fetch("/events/" + id + "/qr", {
+            const res = await fetch("/api/events/" + id + "/qr", {
                 method: "POST"
             })
 
@@ -100,13 +102,20 @@
         }
 
         async function openModify(id) {
-            const res = await fetch("/getevent/" + id, {
+            const res = await fetch("/api/events/" + id, {
                 method: "GET"
             })
 
             const event = await res.json()
 
-            
+            document.getElementById("id").value = id
+            document.getElementById("editName").value = event.name
+            document.getElementById("editLocation").value = event.location
+            document.getElementById("edit-start-time").value = event.startTime
+            document.getElementById("edit-end-time").value = event.endTime
+            document.getElementById("editClassgroup").value = event.classGroup
+
+            document.getElementById("modal").style.display = "flex"
         }
 
         async function createCalendarEvent() {
@@ -115,14 +124,34 @@
             const startTime = document.getElementById("start-time").value
             const endTime = document.getElementById("end-time").value
             const classGroup = document.getElementById("classgroup").value
+            const teacher = document.getElementById("teacher").value
 
-            await fetch("/createevent", {
+            await fetch("/api/events/", {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, location, startTime, endTime, classGroup, teacher })
+            })
+
+            document.getElementById("modal-create").style.display = "none"
+
+            loadEvents()
+        }
+
+        async function updateCalendarEvent() {
+            const id = document.getElementById("id").value
+            const name = document.getElementById("editName").value
+            const location = document.getElementById("editLocation").value
+            const startTime = document.getElementById("edit-start-time").value
+            const endTime = document.getElementById("edit-end-time").value
+            const classGroup = document.getElementById("editClassgroup").value
+
+            await fetch("/api/events/" + id, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, location, startTime, endTime, classGroup })
             })
 
-            document.getElementById("modal-create").style.display = "none"
+            document.getElementById("modal").style.display = "none"
 
             loadEvents()
         }

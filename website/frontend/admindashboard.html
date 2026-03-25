@@ -36,16 +36,17 @@
         <div id="modal" class="modal">
             <div class="modal-content">
                 <h2>Edit User</h2>
-                    <input id="editName">
-                    <input id="editEmail" readonly>
+                <input id="id" readonly>
+                <input id="editName">
+                <input id="editEmail">
 
-                    <select id="editRole">
-                        <option>student</option>
-                        <option>teacher</option>
-                        <option>admin</option>
-                    </select>
+                <select id="editRole">
+                    <option>student</option>
+                    <option>teacher</option>
+                    <option>admin</option>
+                </select>
 
-                    <button onclick="saveUser()" class="primary-btn">Save</button>
+                <button onclick="saveUser()" class="primary-btn">Save</button>
             </div>
         </div>
 
@@ -72,13 +73,13 @@
             let page=0
             const pageSize=10
 
-            async function loadUsers(){
-                const res=await fetch("/users")
-                users=await res.json()
+            async function loadUsers() {
+                const res = await fetch("/api/users/")
+                users = await res.json()
                 render()
             }
 
-            function render(){
+            function render() {
                 const body=document.getElementById("users")
                 body.innerHTML=""
 
@@ -93,8 +94,8 @@
                     <td>${u.role}</td>
 
                     <td>
-                        <button onclick="openModal('${u.email}')">Modify</button>
-                        <button onclick="confirmDelete(this,'${u.email}')">Delete</button>
+                        <button onclick="openModal('${u.id}')">Modify</button>
+                        <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
                     </td>
                     `
                     body.appendChild(row)
@@ -122,42 +123,45 @@
                 render()
             }
 
-            async function confirmDelete(btn,email){
-                if(btn.innerText==="Confirm"){
-                    await fetch("/deleteuser/"+email, { 
-                        method: "POST"
+            async function confirmDelete(btn, id){
+                if (btn.innerText === "Confirm") {
+                    await fetch("/api/users/" + id, { 
+                        method: "DELETE"
                     })
+
                     loadUsers()
-                }else{
+                } else {
                     btn.innerText="Confirm"
                 }
             }
 
-            async function openModal(email){
-                const res=await fetch("/getuser/"+email, { 
+            async function openModal(id) {
+                const res = await fetch("/api/users/" + id, { 
                     method: "GET"
                 })
-                const user=await res.json()
+                const user = await res.json()
 
-                document.getElementById("editName").value=user.name
-                document.getElementById("editEmail").value=user.email
-                document.getElementById("editRole").value=user.role
-                document.getElementById("modal").style.display="flex"
+                document.getElementById("id").value = id
+                document.getElementById("editName").value = user.name
+                document.getElementById("editEmail").value = user.email
+                document.getElementById("editRole").value = user.role
+                document.getElementById("modal").style.display = "flex"
             }
 
             function openCreateModal() {
                 document.getElementById("modal-create").style.display = "flex"
             }
 
-            async function saveUser(){
-                const name=document.getElementById("editName").value
-                const email=document.getElementById("editEmail").value
-                const role=document.getElementById("editRole").value
+            async function saveUser() {
+                const id = document.getElementById("id").value
+                const name = document.getElementById("editName").value
+                const email = document.getElementById("editEmail").value
+                const role = document.getElementById("editRole").value
 
-                await fetch("/updateuser", {
-                    method:"POST",
+                await fetch("/api/users/" + id, {
+                    method:"PUT",
                     headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({email, name, role})
+                    body:JSON.stringify({ email, name, role })
                 })
 
                 document.getElementById("modal").style.display="none"
@@ -171,7 +175,7 @@
                 const password = document.getElementById("password").value
                 const role = document.getElementById("role").value
 
-                await fetch("/createuser", {
+                await fetch("/api/users/", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, name, password, role })
