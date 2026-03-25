@@ -17,13 +17,14 @@ type Props = {
   route: {
     params: {
       classGroup: string;
+      studentEmail: string;
     };
   };
   navigation: any;
 };
 
 export function StudentCalendarScreen({ route, navigation }: Props) {
-  const { classGroup } = route.params;
+  const { classGroup, studentEmail } = route.params;
 
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +105,11 @@ export function StudentCalendarScreen({ route, navigation }: Props) {
                 {status === "open" ? (
                   <Button
                     title="SCAN ATTENDANCE"
-                    onPress={() => navigation.navigate("Scan")}
+                    onPress={() =>
+                      navigation.navigate("Scan", {
+                        studentEmail
+                      })
+                    }
                   />
                 ) : (
                   <Button

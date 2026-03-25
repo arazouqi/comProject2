@@ -2,17 +2,33 @@ import React, { useEffect, useState } from "react";
 import { Alert, Button, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { API_BASE_URL } from "../../services/api";
 
-type Props = { onSignOut: () => void };
+type Props = {
+  onSignOut: () => void;
+  route: {
+    params: {
+      studentEmail: string;
+    };
+  };
+};
 
 function parseQr(data: string): { sessionId: string } | null {
   const raw = (data ?? "").trim();
-  if (!raw.startsWith("session:")) return null;
-  const sessionId = raw.slice("session:".length).trim();
-  return sessionId ? { sessionId } : null;
+
+  if (/^\d+$/.test(raw)) {
+    return { sessionId: raw };
+  }
+
+  if (raw.startsWith("session:")) {
+    const sessionId = raw.slice("session:".length).trim();
+    return sessionId ? { sessionId } : null;
+  }
+
+  return null;
 }
 
-export function ScanScreen({ onSignOut }: Props) {
+export function ScanScreen({ onSignOut, route }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
@@ -24,13 +40,38 @@ export function ScanScreen({ onSignOut }: Props) {
     if (scanned) return;
     setScanned(true);
 
+    console.log("Raw QR value:", data);
+
     const parsed = parseQr(data);
     if (!parsed) {
-      Alert.alert("Invalid QR", "Expected a QR like: session:<id>");
+      Alert.alert("Invalid QR", `Scanned: ${data}`);
       return;
     }
 
-    Alert.alert("Scanned!", `Session ID: ${parsed.sessionId}`);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/events/checkin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          code: parsed.sessionId,
+          email: route.params.studentEmail
+        })
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        Alert.alert("Error", result.error || "Check-in failed");
+        return;
+      }
+
+      Alert.alert("Success", result.message || "Checked in!");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Could not connect to server");
+    }
   }
 
   if (!permission) {

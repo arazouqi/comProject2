@@ -1,50 +1,67 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Seats 2 Login</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
+  <head>
+    <title>Seats 2 Login</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
 
-    <body class="login-body">
-        <div class="login-container">
-            <h1>Seats 2</h1>
+  <body class="login-body">
+    <div class="login-container">
+      <h1>Seats 2</h1>
 
-            <form id="login-form">
-                <label>Email</label>
-                <input id="login" type="text" name="email" required>
+      <form id="login-form">
+        <label>Username or Email</label>
+        <input id="login" type="text" name="email" required>
 
-                <label>Password</label>
-                <input id="password" type="password" name="password" required>
+        <label>Password</label>
+        <input id="password" type="password" name="password" required>
 
-                <button class="primary-btn" type="submit">Login</button>
-            </form>
-        </div>
+        <button class="primary-btn" type="submit">Login</button>
+      </form>
 
-        <script>
-            const loginForm = document.getElementById("login-form")
+      <p id="login-error" style="color: red; margin-top: 10px;"></p>
+    </div>
 
-            async function signIn() {
-                const login = document.getElementById("login").value
-                const password = document.getElementById("password").value
+    <script>
+      const loginForm = document.getElementById("login-form");
+      const errorText = document.getElementById("login-error");
 
-                const res = await fetch("/api/auth/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ login, password })
-                })
+      async function signIn() {
+        const login = document.getElementById("login").value.trim();
+        const password = document.getElementById("password").value.trim();
 
-                const data = await res.json()
+        errorText.textContent = "";
 
-                if (data.success) {
-                    window.location.href = `/${data.user.role}dashboard`
-                }
-            }
-
-            loginForm.addEventListener("submit", async (e) => {
-                e.preventDefault()
-
-                signIn()
+        try {
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: login,
+              login: login,
+              password: password
             })
-        </script>
-    </body>
+          });
+
+          const data = await res.json();
+          console.log("Login response:", data);
+
+          if (!res.ok || !data.success) {
+            errorText.textContent = data.error || "Login failed";
+            return;
+          }
+
+          window.location.href = `/${data.user.role}dashboard`;
+        } catch (err) {
+          console.error("Login request failed:", err);
+          errorText.textContent = "Could not connect to server";
+        }
+      }
+
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        signIn();
+      });
+    </script>
+  </body>
 </html>

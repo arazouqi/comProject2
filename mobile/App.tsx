@@ -35,7 +35,9 @@ type RootStackParamList = {
   StudentDashboard: undefined;
   TeacherDashboard: undefined;
   AdminDashboard: undefined;
-  Scan: undefined;
+  Scan: {
+    studentEmail: string
+  };
   TeacherEvents: undefined;
   CreateEvent: undefined;
   EditEvent: {
@@ -80,7 +82,8 @@ type RootStackParamList = {
     };
   };
   StudentCalendar: {
-    classGroup : string
+    classGroup : string;
+    studentEmail: string;
   };
 };
 
@@ -106,28 +109,34 @@ export default function App() {
               {({ navigation }) => (
                <StudentDashboard
                   onOpenCalendar={() =>
-                    navigation.navigate("StudentCalendar", {
-                      classGroup: signedInUser.classGroup
+                   navigation.navigate("StudentCalendar", {
+                      classGroup: signedInUser.classGroup,
+                      studentEmail: signedInUser.email
                     })
-                  }
+                 }
+                  onSignOut={signOut}
+                />
+              )}
+            </Stack.Screen>
+
+           <Stack.Screen name="Scan" options={{ title: "Attendance Scanner" }}>
+             {({ route }) => (
+               <ScanScreen
                  onSignOut={signOut}
+                 route={route as any}
                 />
               )}
            </Stack.Screen>
 
-           <Stack.Screen name="Scan" options={{ title: "Attendance Scanner" }}>
-             {() => <ScanScreen onSignOut={signOut} />}
-           </Stack.Screen>
-
-            <Stack.Screen name="StudentCalendar" options={{ title: "My Calendar" }}>
+           <Stack.Screen name="StudentCalendar" options={{ title: "My Calendar" }}>
              {({ route, navigation }) => (
                 <StudentCalendarScreen
                   route={route as any}
-                 navigation={navigation}
-                />
-             )}
+                  navigation={navigation}
+               />
+              )}
            </Stack.Screen>
-          </>
+         </>
         ) : signedInUser.role === "teacher" ? (
           <>
             <Stack.Screen name="TeacherDashboard" options={{ title: "Teacher" }}>
