@@ -82,9 +82,7 @@ function formatEvent(event) {
     }
 }
 
-
 // Website page routes
-
 
 app.get("/admindashboard", (req, res) => {
     if ((!req.session.user) || (req.session.role !== "admin")) {
@@ -109,7 +107,6 @@ app.get("/studentdashboard", (req, res) => {
 
     res.sendFile(path.join(__dirname, "../website/frontend/studentdashboard.html"))
 })
-
 
 // Login routes
 
@@ -158,7 +155,7 @@ app.post("/api/login", async (req, res) => {
             await Users.findOne({ username: login, password }) ||
             await Users.findOne({ email: login, password })
 
-            console.log("Found user:", user)
+        console.log("Found user:", user)
 
         if (!user) {
             return res.status(401).json({ error: "Invalid login details" })
@@ -174,10 +171,7 @@ app.post("/api/login", async (req, res) => {
     }
 })
 
-
-
-
-//test to see what users are currently in the MongoDB databse
+// test to see what users are currently in the MongoDB database
 app.get("/api/debug-users", async (req, res) => {
     try {
         const users = await Users.find()
@@ -188,8 +182,7 @@ app.get("/api/debug-users", async (req, res) => {
     }
 })
 
-// User API routers
-
+// User API routes
 
 app.get("/api/users", async (req, res) => {
     try {
@@ -322,9 +315,7 @@ app.delete("/api/users/:id", async (req, res) => {
     }
 })
 
-
 // Event API routes
-
 
 app.get("/api/events", async (req, res) => {
     try {
