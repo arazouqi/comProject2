@@ -14,6 +14,7 @@ import { TeacherEventsScreen } from "./src/screens/teacher/TeacherEventsScreen";
 import { CreateEventScreen } from "./src/screens/teacher/CreateEventScreen";
 import { EditEventScreen } from "./src/screens/teacher/EditEventScreen";
 import { TeacherCalendarScreen } from "./src/screens/teacher/TeacherCalendarScreen";
+import { StudentCalendarScreen } from "./src/screens/student/StudentCalendarScreen";
 
 type UserRole = "student" | "teacher" | "admin";
 
@@ -78,6 +79,9 @@ type RootStackParamList = {
       calendar: string[];
     };
   };
+  StudentCalendar: {
+    classGroup : string
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -100,16 +104,29 @@ export default function App() {
           <>
             <Stack.Screen name="StudentDashboard" options={{ title: "Student" }}>
               {({ navigation }) => (
-                <StudentDashboard
-                  onOpenScanner={() => navigation.navigate("Scan")}
-                  onSignOut={signOut}
+               <StudentDashboard
+                  onOpenCalendar={() =>
+                    navigation.navigate("StudentCalendar", {
+                      classGroup: signedInUser.classGroup
+                    })
+                  }
+                 onSignOut={signOut}
                 />
               )}
-            </Stack.Screen>
+           </Stack.Screen>
 
-            <Stack.Screen name="Scan" options={{ title: "Attendance Scanner" }}>
-              {() => <ScanScreen onSignOut={signOut} />}
-            </Stack.Screen>
+           <Stack.Screen name="Scan" options={{ title: "Attendance Scanner" }}>
+             {() => <ScanScreen onSignOut={signOut} />}
+           </Stack.Screen>
+
+            <Stack.Screen name="StudentCalendar" options={{ title: "My Calendar" }}>
+             {({ route, navigation }) => (
+                <StudentCalendarScreen
+                  route={route as any}
+                 navigation={navigation}
+                />
+             )}
+           </Stack.Screen>
           </>
         ) : signedInUser.role === "teacher" ? (
           <>

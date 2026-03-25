@@ -3,11 +3,14 @@ import { Button, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
-  onOpenScanner: () => void;
+  onOpenCalendar: () => void;
   onSignOut: () => void;
 };
 
-export function StudentDashboard({ onOpenScanner, onSignOut }: Props) {
+export function StudentDashboard({
+  onOpenCalendar,
+  onSignOut
+}: Props) {
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
       <Text style={{ fontSize: 24, fontWeight: "700", marginBottom: 16 }}>
@@ -15,10 +18,8 @@ export function StudentDashboard({ onOpenScanner, onSignOut }: Props) {
       </Text>
 
       <View style={{ gap: 12 }}>
-        <Button title="View Calendar" onPress={() => {}} />
-        <Button title="View Event" onPress={() => {}} />
-        <Button title="Mark Attendance" onPress={onOpenScanner} />
-        <Button title="Sign Out" onPress={onSignOut} />
+        <Button title="VIEW CALENDAR" onPress={onOpenCalendar} />
+        <Button title="SIGN OUT" onPress={onSignOut} />
       </View>
     </SafeAreaView>
   );

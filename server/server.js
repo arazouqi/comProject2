@@ -171,7 +171,7 @@ app.post("/api/login", async (req, res) => {
     }
 })
 
-// test to see what users are currently in the MongoDB database
+// test to see what users are currently in the MongoDB
 app.get("/api/debug-users", async (req, res) => {
     try {
         const users = await Users.find()
@@ -179,6 +179,17 @@ app.get("/api/debug-users", async (req, res) => {
     } catch (err) {
         console.log(err)
         res.status(500).json({ error: "Could not fetch users" })
+    }
+})
+
+//test to see waht events are currently in the MongoDB 
+app.get("/api/debug-events", async (req, res) => {
+    try {
+        const events = await Event.find()
+        res.json(events.map(formatEvent))
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Could not fetch events" })
     }
 })
 
@@ -320,6 +331,16 @@ app.delete("/api/users/:id", async (req, res) => {
 app.get("/api/events", async (req, res) => {
     try {
         const events = await Event.find()
+        res.json(events.map(formatEvent))
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error fetching events" })
+    }
+})
+
+app.get("/api/events/class/:classGroup", async (req, res) => {
+    try {
+        const events = await Event.find({ classGroup: req.params.classGroup })
         res.json(events.map(formatEvent))
     } catch (err) {
         console.log(err)
