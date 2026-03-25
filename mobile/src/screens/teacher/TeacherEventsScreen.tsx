@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Button, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { API_BASE_URL } from "../../services/api";
+import { useFocusEffect } from "@react-navigation/native";
 
 type EventItem = {
   id: string;
@@ -34,9 +35,11 @@ export function TeacherEventsScreen({ navigation }: Props) {
     }
   }
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+     fetchEvents();
+   }, [])
+  );
 
   async function handleDeleteEvent(id: string) {
     try {
