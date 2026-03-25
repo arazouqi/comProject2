@@ -9,15 +9,42 @@
         <div class="login-container">
             <h1>Seats 2</h1>
 
-            <form method="post" action="/login">
+            <form id="login-form">
                 <label>Email</label>
-                <input type="text" name="email" required>
+                <input id="login" type="text" name="email" required>
 
                 <label>Password</label>
-                <input type="password" name="password" required>
+                <input id="password" type="password" name="password" required>
 
-                <button class="primary-btn">Login</button>
+                <button class="primary-btn" type="submit">Login</button>
             </form>
         </div>
+
+        <script>
+            const loginForm = document.getElementById("login-form")
+
+            async function signIn() {
+                const login = document.getElementById("login").value
+                const password = document.getElementById("password").value
+
+                const res = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ login, password })
+                })
+
+                const data = await res.json()
+
+                if (data.success) {
+                    window.location.href = `/${data.user.role}dashboard`
+                }
+            }
+
+            loginForm.addEventListener("submit", async (e) => {
+                e.preventDefault()
+
+                signIn()
+            })
+        </script>
     </body>
 </html>

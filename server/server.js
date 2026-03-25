@@ -130,7 +130,7 @@ app.post("/login", async (req, res) => {
 
         req.session.user = user.email
         req.session.role = user.role
-
+        
         res.json({
             success: true,
             user: formatUser(user)
