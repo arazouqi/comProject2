@@ -107,7 +107,7 @@ router.put("/:id", async (req, res) => {
         const updatedUser = await Users.findByIdAndUpdate(
             req.params.id,
             { username, name, email, password, role, classGroup },
-            { new: true }
+            { returnDocument: "after" }
         )
 
         if (!updatedUser) {

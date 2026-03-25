@@ -79,7 +79,7 @@ router.put("/:id", async (req, res) => {
         const updatedEvent = await Event.findByIdAndUpdate(
             req.params.id,
             { name, location, startTime, endTime, classGroup },
-            { new: true }
+            { returnDocument: "after" }
         )
 
         if (!updatedEvent) {
@@ -115,7 +115,7 @@ router.post("/:id/qr", async (req, res) => {
         const updatedEvent = await Event.findByIdAndUpdate(
             req.params.id,
             { qrCode: code },
-            { new: true }
+            { returnDocument: "after" }
         )
 
         if (!updatedEvent) {

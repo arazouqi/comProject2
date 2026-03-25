@@ -34,6 +34,7 @@
             <input id="start-time" type="date" name="start-time" placeholder="Start Time" required><br>
             <input id="end-time" type="date" name="end-time" placeholder="End Time" required><br>
             <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
+            <input id="teacher" type="string" name="teacher" placeholder="Teacher" required><br>
 
             <button onclick="createCalendarEvent()" class="primary-btn">Create</button>
         </div>
@@ -50,7 +51,7 @@
 
     <script>
         async function loadEvents() {
-            const res = await fetch("/events")
+            const res = await fetch("/api/events/", { method: "GET" })
             const events = await res.json()
             const cal = document.getElementById("calendar")
             cal.innerHTML = ""
@@ -60,9 +61,9 @@
                 card.innerHTML = `
                     <h3>${e.name}</h3>
                     <p>${new Date(e.startTime).toLocaleString()}-${new Date(e.endTime).toLocaleString()}</p>
-                    <button onclick="openModify('${e._id}')">Modify</button>
-                    <button onclick="deleteEvent(this, '${e._id}')">Delete</button>
-                    <button onclick="qr('${e._id}')">QR</button>
+                    <button onclick="openModify('${e.id}')">Modify</button>
+                    <button onclick="deleteEvent(this, '${e.id}')">Delete</button>
+                    <button onclick="qr('${e.id}')">QR</button>
                 `
                 cal.appendChild(card)
             })
@@ -70,7 +71,7 @@
         
         async function deleteEvent(btn,id) {
             if (btn.innerText==="Confirm") {
-                await fetch("/events/"+id, { 
+                await fetch("/api/events/" + id, { 
                     method: "DELETE"
                 })
                 loadEvents()
@@ -80,7 +81,7 @@
         }
 
         async function qr(id) {
-            const res = await fetch("/events/" + id + "/qr", {
+            const res = await fetch("/api/events/" + id + "/qr", {
                 method: "POST"
             })
 
@@ -101,7 +102,7 @@
         }
 
         async function openModify(id) {
-            const res = await fetch("/getevent/" + id, {
+            const res = await fetch("/api/events/" + id, {
                 method: "GET"
             })
 
@@ -123,11 +124,12 @@
             const startTime = document.getElementById("start-time").value
             const endTime = document.getElementById("end-time").value
             const classGroup = document.getElementById("classgroup").value
+            const teacher = document.getElementById("teacher").value
 
-            await fetch("/createevent", {
+            await fetch("/api/events/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, location, startTime, endTime, classGroup })
+                body: JSON.stringify({ name, location, startTime, endTime, classGroup, teacher })
             })
 
             document.getElementById("modal-create").style.display = "none"
@@ -143,8 +145,8 @@
             const endTime = document.getElementById("edit-end-time").value
             const classGroup = document.getElementById("editClassgroup").value
 
-            await fetch("/events/"+id, {
-                method: "PATCH",
+            await fetch("/api/events/" + id, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, location, startTime, endTime, classGroup })
             })
