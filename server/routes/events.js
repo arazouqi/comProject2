@@ -143,10 +143,14 @@ router.post("/checkin", async (req, res) => {
             return res.status(404).json({ error: "Invalid QR code" })
         }
 
-        if (!event.attendees.includes(email)) {
-            event.attendees.push(email)
-            await event.save()
+        if (event.attendees.includes(email)) {
+            return res.status(400).json({
+                error: "You have already checked in to this event"
+            })
         }
+
+        event.attendees.push(email)
+        await event.save()
 
         res.json({ success: true, message: "Checked in successfully" })
     } catch (err) {
