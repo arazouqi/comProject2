@@ -7,7 +7,7 @@ const authRoutes = require("./routes/auth")
 const userRoutes = require("./routes/users")
 const eventRoutes = require("./routes/events")
 
-const connectDB = require("./config/database")
+const connectDB = require("./util/database")
 
 const app = express()
 
