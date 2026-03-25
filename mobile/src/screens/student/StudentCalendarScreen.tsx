@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Alert, Button, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { API_BASE_URL } from "../../services/api";
 
 type EventItem = {
@@ -11,6 +12,7 @@ type EventItem = {
   endTime: string;
   classGroup: string;
   teacher: string;
+  attendees?: string[];
 };
 
 type Props = {
@@ -47,14 +49,21 @@ export function StudentCalendarScreen({ route, navigation }: Props) {
     }
   }
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoading(true);
+      fetchEvents();
+    }, [classGroup])
+  );
 
   function getAttendanceStatus(event: EventItem) {
     const now = new Date();
     const start = new Date(event.startTime);
     const end = new Date(event.endTime);
+
+    if (Array.isArray(event.attendees) && event.attendees.includes(studentEmail)) {
+      return "checked-in";
+    }
 
     if (now < start) return "not-open";
     if (now > end) return "closed";
@@ -62,6 +71,7 @@ export function StudentCalendarScreen({ route, navigation }: Props) {
   }
 
   function getStatusText(status: string) {
+    if (status === "checked-in") return "Already checked in";
     if (status === "not-open") return "Attendance not open yet";
     if (status === "closed") return "Attendance closed";
     return "Attendance open";
@@ -107,10 +117,13 @@ export function StudentCalendarScreen({ route, navigation }: Props) {
                     title="SCAN ATTENDANCE"
                     onPress={() =>
                       navigation.navigate("Scan", {
-                        studentEmail
+                        studentEmail,
+                        eventId: item.id
                       })
                     }
                   />
+                ) : status === "checked-in" ? (
+                  <Button title="ALREADY CHECKED IN" onPress={() => {}} disabled />
                 ) : (
                   <Button
                     title={status === "not-open" ? "NOT OPEN YET" : "ATTENDANCE CLOSED"}

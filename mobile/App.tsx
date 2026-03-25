@@ -36,7 +36,8 @@ type RootStackParamList = {
   TeacherDashboard: undefined;
   AdminDashboard: undefined;
   Scan: {
-    studentEmail: string
+    studentEmail: string;
+    eventId?: string;
   };
   TeacherEvents: undefined;
   CreateEvent: undefined;
@@ -120,10 +121,11 @@ export default function App() {
             </Stack.Screen>
 
            <Stack.Screen name="Scan" options={{ title: "Attendance Scanner" }}>
-             {({ route }) => (
+             {({ route, navigation }) => (
                <ScanScreen
                  onSignOut={signOut}
                  route={route as any}
+                navigation={navigation}
                 />
               )}
            </Stack.Screen>

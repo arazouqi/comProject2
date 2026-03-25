@@ -9,8 +9,10 @@ type Props = {
   route: {
     params: {
       studentEmail: string;
+      eventId?: string;
     };
   };
+  navigation: any;
 };
 
 function parseQr(data: string): { sessionId: string } | null {
@@ -28,16 +30,17 @@ function parseQr(data: string): { sessionId: string } | null {
   return null;
 }
 
-export function ScanScreen({ onSignOut, route }: Props) {
+export function ScanScreen({ onSignOut, route, navigation }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [checkedIn, setCheckedIn] = useState(false);
 
   useEffect(() => {
     if (!permission) requestPermission();
   }, [permission, requestPermission]);
 
   async function handleScan(data: string) {
-    if (scanned) return;
+    if (scanned || checkedIn) return;
     setScanned(true);
 
     console.log("Raw QR value:", data);
@@ -67,7 +70,14 @@ export function ScanScreen({ onSignOut, route }: Props) {
         return;
       }
 
-      Alert.alert("Success", result.message || "Checked in!");
+      setCheckedIn(true);
+
+      Alert.alert("Success", result.message || "Checked in successfully", [
+        {
+          text: "OK",
+          onPress: () => navigation.goBack()
+        }
+      ]);
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Could not connect to server");
@@ -108,7 +118,13 @@ export function ScanScreen({ onSignOut, route }: Props) {
       </View>
 
       <View style={{ padding: 16, gap: 10 }}>
-        <Button title={scanned ? "Scan again" : "Scanning…"} onPress={() => setScanned(false)} />
+        <Button
+          title={checkedIn ? "CHECKED IN" : scanned ? "Scan again" : "Scanning…"}
+          onPress={() => {
+            if (!checkedIn) setScanned(false);
+          }}
+          disabled={checkedIn}
+        />
         <Button title="Sign out" onPress={onSignOut} />
       </View>
     </SafeAreaView>
