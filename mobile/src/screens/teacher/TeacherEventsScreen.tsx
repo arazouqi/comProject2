@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { API_BASE_URL } from "../../services/api";
 
 type EventItem = {
-  id: number;
+  id: string;
   name: string;
   location: string;
   startTime: string;
@@ -38,7 +38,7 @@ export function TeacherEventsScreen({ navigation }: Props) {
     fetchEvents();
   }, []);
 
-  async function handleDeleteEvent(id: number) {
+  async function handleDeleteEvent(id: string) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/events/${id}`, {
         method: "DELETE"
