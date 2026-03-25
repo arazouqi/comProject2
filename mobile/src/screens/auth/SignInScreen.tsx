@@ -1,25 +1,60 @@
 import React, { useState } from "react";
 import { Alert, Button, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { API_BASE_URL } from "../../services/api";
 
-type Role = "student" | "teacher" | "admin";
+type UserRole = "student" | "teacher" | "admin";
+
+type SignedInUser = {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  classGroup: string;
+  attendance: string[];
+  calendar: string[];
+};
 
 type Props = {
-  onSignedIn: (email: string, role: Role) => void;
+  onSignedIn: (user: SignedInUser) => void;
 };
 
 export function SignInScreen({ onSignedIn }: Props) {
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Role>("student");
 
-  function signIn() {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert("Missing info", "Please enter email and password.");
+  async function handleSignIn() {
+    if (!login.trim() || !password.trim()) {
+      Alert.alert("Missing info", "Please enter your email/username and password.");
       return;
     }
 
-    onSignedIn(email.trim().toLowerCase(), role);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          login,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert("Login Failed", data.error || "Invalid login details.");
+        return;
+      }
+
+      onSignedIn(data.user);
+    } catch (error) {
+      console.error("Login failed:", error);
+      Alert.alert("Network Error", "Could not connect to server.");
+    }
   }
 
   return (
@@ -31,15 +66,15 @@ export function SignInScreen({ onSignedIn }: Props) {
         Sign in to continue
       </Text>
 
-      <View style={{ gap: 8, marginBottom: 16 }}>
+      <View style={{ gap: 12 }}>
         <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Email"
+          value={login}
+          onChangeText={setLogin}
+          placeholder="Email or username"
           autoCapitalize="none"
-          keyboardType="email-address"
           style={{ borderWidth: 1, borderRadius: 10, padding: 12 }}
         />
+
         <TextInput
           value={password}
           onChangeText={setPassword}
@@ -47,19 +82,9 @@ export function SignInScreen({ onSignedIn }: Props) {
           secureTextEntry
           style={{ borderWidth: 1, borderRadius: 10, padding: 12 }}
         />
+
+        <Button title="Sign in" onPress={handleSignIn} />
       </View>
-
-      <Text style={{ marginBottom: 8, fontWeight: "600" }}>Select role</Text>
-
-      <View style={{ gap: 8, marginBottom: 16 }}>
-        <Button title="Student" onPress={() => setRole("student")} />
-        <Button title="Teacher" onPress={() => setRole("teacher")} />
-        <Button title="Admin" onPress={() => setRole("admin")} />
-      </View>
-
-      <Text style={{ marginBottom: 16 }}>Current role: {role}</Text>
-
-      <Button title="Sign in" onPress={signIn} />
     </SafeAreaView>
   );
 }

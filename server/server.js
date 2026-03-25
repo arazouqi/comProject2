@@ -9,7 +9,8 @@ const Event = require("./schemas/eventSchema")
 
 const app = express()
 const port = 3000
-const uri = "mongodb+srv://server:cRJjbrmAXke5Og1u@cluster0.kfgtefg.mongodb.net/?appName=Cluster0"
+
+const uri = "mongodb://server:cRJjbrmAXke5Og1u@ac-3bjmlva-shard-00-00.kfgtefg.mongodb.net:27017,ac-3bjmlva-shard-00-01.kfgtefg.mongodb.net:27017,ac-3bjmlva-shard-00-02.kfgtefg.mongodb.net:27017/?ssl=true&replicaSet=atlas-g0hk75-shard-0&authSource=admin&appName=Cluster0"
 
 const allowedRoles = ["student", "teacher", "admin"]
 
@@ -53,21 +54,10 @@ async function start() {
 
 start().catch(console.dir)
 
-function normalizeClassGroup(value) {
-    return value || "none"
-}
-
-function buildUsername({ username, email, name }) {
-    if (username && username.trim()) return username.trim()
-    if (email && email.includes("@")) return email.split("@")[0]
-    if (name && name.trim()) return name.trim().toLowerCase().replace(/\s+/g, "-")
-    return ""
-}
-
 function formatUser(user) {
     return {
-        id: user._id?.toString() || user.id?.toString() || "",
-        username: user.username || buildUsername(user),
+        id: user._id.toString(),
+        username: user.username || "",
         name: user.name || "",
         email: user.email || "",
         password: user.password || "",
@@ -80,187 +70,19 @@ function formatUser(user) {
 
 function formatEvent(event) {
     return {
-        id: event._id?.toString() || event.id?.toString() || "",
+        id: event._id.toString(),
         name: event.name || "",
         location: event.location || "",
         startTime: event.startTime || "",
         endTime: event.endTime || "",
         classGroup: event.classGroup || "",
         teacher: event.teacher || "",
-        qrCode: event.qrCode || null,
+        qrCode: event.qrCode || "",
         attendees: event.attendees || []
     }
 }
 
-
-// Website routes
-app.post("/createuser", async (req, res) => {
-    const { name, email, password, role, classGroup } = req.body
-    const username = buildUsername({ email, name })
-
-    try {
-        if (!name || !email || !password || !role) {
-            return res.redirect("/createuserpage.html?message=Missing required fields&status=error")
-        }
-
-        if (!allowedRoles.includes(role)) {
-            return res.redirect("/createuserpage.html?message=Invalid role&status=error")
-        }
-
-        const normalizedClassGroup = normalizeClassGroup(classGroup)
-
-        if (normalizedClassGroup !== "none" && !allowedClassGroups.includes(normalizedClassGroup)) {
-            return res.redirect("/createuserpage.html?message=Invalid class group&status=error")
-        }
-
-        const emailExists = await Users.findOne({ email })
-        if (emailExists) {
-            return res.redirect("/createuserpage.html?message=Email already exists&status=error")
-        }
-
-        const usernameExists = await Users.findOne({ username })
-        if (usernameExists) {
-            return res.redirect("/createuserpage.html?message=Username already exists&status=error")
-        }
-
-        await Users.create({
-            username,
-            name,
-            email,
-            password,
-            role,
-            classGroup: normalizedClassGroup,
-            attendance: [],
-            calendar: []
-        })
-    } catch (err) {
-        console.log(err)
-    }
-})
-
-app.post("/deleteuser/:email", async (req, res) => {
-    const { email } = req.params
-
-    try {
-        await Users.findOneAndDelete({ email })
-    } catch (err) {
-        console.log(err)
-    }
-})
-
-app.post("/createevent", async (req,res) => {
-    const event=await Event.create(req.body)
-    res.json(event)
-})
-
-app.get("/events", async (req,res) => {
-    const events=await Event.find()
-    res.json(events)
-})
-
-app.get("/getevent/:id", async (req, res) => {
-    const id = req.params.id
-
-    const event = await Event.findById(id)
-
-    res.json(event)
-})
-
-app.patch("/events/:id", async (req,res) => {
-    await Event.findByIdAndUpdate(req.params.id,req.body)
-    res.send("updated")
-})
-
-app.delete("/events/:id", async (req,res) => {
-    await Event.findByIdAndDelete(req.params.id)
-    res.send("deleted")
-})
-
-app.post("/events/:id/qr", async (req,res) => {
-    const code=Math.floor(100000+Math.random()*900000)
-    await Event.findByIdAndUpdate(req.params.id,{qrCode:code})
-    res.json({code})
-})
-
-app.post("/checkin", async (req,res) => {
-    const {code,email}=req.body
-    const event=await Event.findOne({qrCode:code})
-
-    if(!event) return res.send("Invalid code")
-
-    event.attendees.push(email)
-    await event.save()
-    res.send("Checked in")
-})
-
-app.post("/updateuser", async (req, res) => {
-    const { email } = req.query
-    const { name, role, classGroup } = req.body
-
-    try {
-        await Users.findOneAndUpdate(
-            { email },
-            { name, role }
-        )
-    } catch (err) {
-        console.log(err)
-    }
-})
-
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body
-
-    try {
-        let user = await Users.findOne({ email, password })
-
-        if (!user && (email === "admin" || email === "teacher" || email === "student")) {
-            req.session.user = email
-            req.session.role = email
-            if (email === "admin") return res.redirect("/admindashboard")
-            if (email === "teacher") return res.redirect("/teacherdashboard")
-            return res.redirect("/studentdashboard")
-        }
-
-        if (!user) {
-            return res.send("Invalid login")
-        }
-
-        req.session.user = user.email
-        req.session.role = user.role
-
-        if (user.role === "admin") return res.redirect("/admindashboard")
-        if (user.role === "teacher") return res.redirect("/teacherdashboard")
-        if (user.role === "student") return res.redirect("/studentdashboard")
-
-        res.send("Invalid login")
-    } catch (err) {
-        console.log(err)
-        res.send("Error logging in")
-    }
-})
-
-app.get("/getuser/:email", async (req, res) => {
-    const { email } = req.params
-
-    try {
-        const user = await Users.findOne({ email })
-        if (!user) return res.status(404).send("User not found")
-        res.json(formatUser(user))
-    } catch (err) {
-        console.log(err)
-        res.status(500).send("Error")
-    }
-})
-
-app.get("/users", async (req, res) => {
-    try {
-        const users = await Users.find()
-        res.json(users.map(formatUser))
-    } catch (err) {
-        console.log(err)
-        res.status(500).send("Error fetching users")
-    }
-})
+// Website page routes
 
 app.get("/admindashboard", (req, res) => {
     if ((!req.session.user) || (req.session.role !== "admin")) {
@@ -286,129 +108,57 @@ app.get("/studentdashboard", (req, res) => {
     res.sendFile(path.join(__dirname, "../website/frontend/studentdashboard.html"))
 })
 
+// Login routes
 
-// Website + generic event routes
+// Website login (JSON now)
+app.post("/login", async (req, res) => {
+    const { login, email, password } = req.body
+    const loginValue = login || email
 
-
-app.post("/events", async (req, res) => {
     try {
-        const { name, location, startTime, endTime, classGroup, teacher } = req.body
-
-        if (!name || !location || !startTime || !endTime || !classGroup || !teacher) {
-            return res.status(400).json({ error: "Missing required event fields" })
+        if (!loginValue || !password) {
+            return res.status(400).json({ error: "Login and password are required" })
         }
 
-        if (!allowedClassGroups.includes(classGroup)) {
-            return res.status(400).json({ error: "Invalid class group" })
-        }
-
-        const event = await Event.create({
-            name,
-            location,
-            startTime,
-            endTime,
-            classGroup,
-            teacher,
-            attendees: [],
-            qrCode: null
-        })
-
-        res.json(formatEvent(event))
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: "Error creating event" })
-    }
-})
-
-app.get("/events", async (req, res) => {
-    try {
-        const events = await Event.find()
-        res.json(events.map(formatEvent))
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: "Error fetching events" })
-    }
-})
-
-app.patch("/events/:id", async (req, res) => {
-    try {
-        if (req.body.classGroup && !allowedClassGroups.includes(req.body.classGroup)) {
-            return res.status(400).json({ error: "Invalid class group" })
-        }
-
-        const updated = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true })
-        if (!updated) return res.status(404).json({ error: "Event not found" })
-
-        res.json(formatEvent(updated))
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: "Error updating event" })
-    }
-})
-
-app.delete("/events/:id", async (req, res) => {
-    try {
-        await Event.findByIdAndDelete(req.params.id)
-        res.send("deleted")
-    } catch (err) {
-        console.log(err)
-        res.status(500).send("Error deleting event")
-    }
-})
-
-app.post("/events/:id/qr", async (req, res) => {
-    try {
-        const code = Math.floor(100000 + Math.random() * 900000)
-        await Event.findByIdAndUpdate(req.params.id, { qrCode: code })
-        res.json({ code })
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: "Error generating QR" })
-    }
-})
-
-app.post("/checkin", async (req, res) => {
-    const { code, email } = req.body
-
-    try {
-        const event = await Event.findOne({ qrCode: code })
-
-        if (!event) return res.status(400).send("Invalid code")
-
-        if (!Array.isArray(event.attendees)) {
-            event.attendees = []
-        }
-
-        if (!event.attendees.includes(email)) {
-            event.attendees.push(email)
-        }
-
-        await event.save()
-        res.send("Checked in")
-    } catch (err) {
-        console.log(err)
-        res.status(500).send("Error checking in")
-    }
-})
-
-
-// Mobile API routes
-
-
-app.post("/api/login", async (req, res) => {
-    const { username } = req.body
-
-    try {
-        let user =
-            await Users.findOne({ username }) ||
-            await Users.findOne({ email: username })
-
-        if (!user && (username === "admin" || username === "teacher" || username === "student")) {
-            user = await Users.findOne({ username })
-        }
+        const user =
+            await Users.findOne({ username: loginValue, password }) ||
+            await Users.findOne({ email: loginValue, password })
 
         if (!user) {
-            return res.status(401).json({ error: "Invalid login" })
+            return res.status(401).json({ error: "Invalid login details" })
+        }
+
+        req.session.user = user.email
+        req.session.role = user.role
+
+        res.json({
+            success: true,
+            user: formatUser(user)
+        })
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Login failed" })
+    }
+})
+
+// Mobile login
+app.post("/api/login", async (req, res) => {
+    const { login, password } = req.body
+    console.log("Login body:", req.body)
+
+    try {
+        if (!login || !password) {
+            return res.status(400).json({ error: "Login and password are required" })
+        }
+
+        const user =
+            await Users.findOne({ username: login, password }) ||
+            await Users.findOne({ email: login, password })
+
+        console.log("Found user:", user)
+
+        if (!user) {
+            return res.status(401).json({ error: "Invalid login details" })
         }
 
         res.json({
@@ -421,6 +171,152 @@ app.post("/api/login", async (req, res) => {
     }
 })
 
+// test to see what users are currently in the MongoDB database
+app.get("/api/debug-users", async (req, res) => {
+    try {
+        const users = await Users.find()
+        res.json(users)
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Could not fetch users" })
+    }
+})
+
+// User API routes
+
+app.get("/api/users", async (req, res) => {
+    try {
+        const users = await Users.find()
+        res.json(users.map(formatUser))
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error fetching users" })
+    }
+})
+
+app.get("/api/users/:id", async (req, res) => {
+    try {
+        const user = await Users.findById(req.params.id)
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" })
+        }
+
+        res.json(formatUser(user))
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error fetching user" })
+    }
+})
+
+app.post("/api/users", async (req, res) => {
+    try {
+        const { username, name, email, password, role, classGroup } = req.body
+
+        if (!username || !name || !email || !password || !role || !classGroup) {
+            return res.status(400).json({
+                error: "Username, name, email, password, role, and classGroup are required"
+            })
+        }
+
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ error: "Invalid role" })
+        }
+
+        if (classGroup !== "none" && !allowedClassGroups.includes(classGroup)) {
+            return res.status(400).json({ error: "Invalid class group" })
+        }
+
+        const existingUsername = await Users.findOne({ username })
+        if (existingUsername) {
+            return res.status(400).json({ error: "Username already exists" })
+        }
+
+        const existingEmail = await Users.findOne({ email })
+        if (existingEmail) {
+            return res.status(400).json({ error: "Email already exists" })
+        }
+
+        const user = await Users.create({
+            username,
+            name,
+            email,
+            password,
+            role,
+            classGroup,
+            attendance: [],
+            calendar: []
+        })
+
+        res.status(201).json(formatUser(user))
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error creating user" })
+    }
+})
+
+app.put("/api/users/:id", async (req, res) => {
+    try {
+        const { username, name, email, password, role, classGroup } = req.body
+
+        if (!username || !name || !email || !password || !role || !classGroup) {
+            return res.status(400).json({
+                error: "Username, name, email, password, role, and classGroup are required"
+            })
+        }
+
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ error: "Invalid role" })
+        }
+
+        if (classGroup !== "none" && !allowedClassGroups.includes(classGroup)) {
+            return res.status(400).json({ error: "Invalid class group" })
+        }
+
+        const existingUsername = await Users.findOne({ username })
+        if (existingUsername && existingUsername._id.toString() !== req.params.id) {
+            return res.status(400).json({ error: "Username already exists" })
+        }
+
+        const existingEmail = await Users.findOne({ email })
+        if (existingEmail && existingEmail._id.toString() !== req.params.id) {
+            return res.status(400).json({ error: "Email already exists" })
+        }
+
+        const updatedUser = await Users.findByIdAndUpdate(
+            req.params.id,
+            { username, name, email, password, role, classGroup },
+            { new: true }
+        )
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: "User not found" })
+        }
+
+        res.json(formatUser(updatedUser))
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error updating user" })
+    }
+})
+
+app.delete("/api/users/:id", async (req, res) => {
+    try {
+        const deletedUser = await Users.findByIdAndDelete(req.params.id)
+
+        if (!deletedUser) {
+            return res.status(404).json({ error: "User not found" })
+        }
+
+        res.json({ success: true })
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error deleting user" })
+    }
+})
+
+// Event API routes
+
 app.get("/api/events", async (req, res) => {
     try {
         const events = await Event.find()
@@ -428,6 +324,21 @@ app.get("/api/events", async (req, res) => {
     } catch (err) {
         console.log(err)
         res.status(500).json({ error: "Error fetching events" })
+    }
+})
+
+app.get("/api/events/:id", async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id)
+
+        if (!event) {
+            return res.status(404).json({ error: "Event not found" })
+        }
+
+        res.json(formatEvent(event))
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Error fetching event" })
     }
 })
 
@@ -452,11 +363,11 @@ app.post("/api/events", async (req, res) => {
             endTime,
             classGroup,
             teacher,
-            attendees: [],
-            qrCode: null
+            qrCode: "",
+            attendees: []
         })
 
-        res.json(formatEvent(event))
+        res.status(201).json(formatEvent(event))
     } catch (err) {
         console.log(err)
         res.status(500).json({ error: "Error creating event" })
@@ -477,17 +388,17 @@ app.put("/api/events/:id", async (req, res) => {
             return res.status(400).json({ error: "Invalid class group" })
         }
 
-        const updated = await Event.findByIdAndUpdate(
+        const updatedEvent = await Event.findByIdAndUpdate(
             req.params.id,
             { name, location, startTime, endTime, classGroup },
             { new: true }
         )
 
-        if (!updated) {
+        if (!updatedEvent) {
             return res.status(404).json({ error: "Event not found" })
         }
 
-        res.json(formatEvent(updated))
+        res.json(formatEvent(updatedEvent))
     } catch (err) {
         console.log(err)
         res.status(500).json({ error: "Error updating event" })
@@ -496,9 +407,9 @@ app.put("/api/events/:id", async (req, res) => {
 
 app.delete("/api/events/:id", async (req, res) => {
     try {
-        const deleted = await Event.findByIdAndDelete(req.params.id)
+        const deletedEvent = await Event.findByIdAndDelete(req.params.id)
 
-        if (!deleted) {
+        if (!deletedEvent) {
             return res.status(404).json({ error: "Event not found" })
         }
 
@@ -509,119 +420,50 @@ app.delete("/api/events/:id", async (req, res) => {
     }
 })
 
-app.get("/api/users", async (req, res) => {
+app.post("/api/events/:id/qr", async (req, res) => {
     try {
-        const users = await Users.find()
-        res.json(users.map(formatUser))
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: "Error fetching users" })
-    }
-})
+        const code = Math.floor(100000 + Math.random() * 900000).toString()
 
-app.post("/api/users", async (req, res) => {
-    try {
-        const { username, name, email, password, role, classGroup } = req.body
-
-        if (!username || !name || !email || !password || !role || !classGroup) {
-            return res.status(400).json({
-                error: "Username, name, email, password, role, and classGroup are required"
-            })
-        }
-
-        if (!allowedRoles.includes(role)) {
-            return res.status(400).json({ error: "Invalid role" })
-        }
-
-        if (!allowedClassGroups.includes(classGroup) && classGroup !== "none") {
-            return res.status(400).json({ error: "Invalid class group" })
-        }
-
-        const usernameExists = await Users.findOne({ username })
-        if (usernameExists) {
-            return res.status(400).json({ error: "Username already exists" })
-        }
-
-        const emailExists = await Users.findOne({ email })
-        if (emailExists) {
-            return res.status(400).json({ error: "Email already exists" })
-        }
-
-        const user = await Users.create({
-            username,
-            name,
-            email,
-            password,
-            role,
-            classGroup,
-            attendance: [],
-            calendar: []
-        })
-
-        res.json(formatUser(user))
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: "Error creating user" })
-    }
-})
-
-app.put("/api/users/:id", async (req, res) => {
-    try {
-        const { username, name, email, password, role, classGroup } = req.body
-
-        if (!username || !name || !email || !password || !role || !classGroup) {
-            return res.status(400).json({
-                error: "Username, name, email, password, role, and classGroup are required"
-            })
-        }
-
-        if (!allowedRoles.includes(role)) {
-            return res.status(400).json({ error: "Invalid role" })
-        }
-
-        if (!allowedClassGroups.includes(classGroup) && classGroup !== "none") {
-            return res.status(400).json({ error: "Invalid class group" })
-        }
-
-        const existingUsername = await Users.findOne({ username })
-        if (existingUsername && existingUsername._id.toString() !== req.params.id) {
-            return res.status(400).json({ error: "Username already exists" })
-        }
-
-        const existingEmail = await Users.findOne({ email })
-        if (existingEmail && existingEmail._id.toString() !== req.params.id) {
-            return res.status(400).json({ error: "Email already exists" })
-        }
-
-        const updated = await Users.findByIdAndUpdate(
+        const updatedEvent = await Event.findByIdAndUpdate(
             req.params.id,
-            { username, name, email, password, role, classGroup },
+            { qrCode: code },
             { new: true }
         )
 
-        if (!updated) {
-            return res.status(404).json({ error: "User not found" })
+        if (!updatedEvent) {
+            return res.status(404).json({ error: "Event not found" })
         }
 
-        res.json(formatUser(updated))
+        res.json({ code })
     } catch (err) {
         console.log(err)
-        res.status(500).json({ error: "Error updating user" })
+        res.status(500).json({ error: "Error generating QR code" })
     }
 })
 
-app.delete("/api/users/:id", async (req, res) => {
+app.post("/api/checkin", async (req, res) => {
     try {
-        const deleted = await Users.findByIdAndDelete(req.params.id)
+        const { code, email } = req.body
 
-        if (!deleted) {
-            return res.status(404).json({ error: "User not found" })
+        if (!code || !email) {
+            return res.status(400).json({ error: "Code and email are required" })
         }
 
-        res.json({ success: true })
+        const event = await Event.findOne({ qrCode: code })
+
+        if (!event) {
+            return res.status(404).json({ error: "Invalid QR code" })
+        }
+
+        if (!event.attendees.includes(email)) {
+            event.attendees.push(email)
+            await event.save()
+        }
+
+        res.json({ success: true, message: "Checked in successfully" })
     } catch (err) {
         console.log(err)
-        res.status(500).json({ error: "Error deleting user" })
+        res.status(500).json({ error: "Error checking in" })
     }
 })
 

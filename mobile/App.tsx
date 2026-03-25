@@ -8,14 +8,26 @@ import { StudentDashboard } from "./src/screens/student/StudentDashboard";
 import { TeacherDashboard } from "./src/screens/teacher/TeacherDashboard";
 import { AdminDashboard } from "./src/screens/admin/AdminDashboard";
 import { AdminUsersScreen } from "./src/screens/admin/AdminUsersScreen";
+import { EditUserScreen } from "./src/screens/admin/EditUserScreen";
+import { UserCalendarScreen } from "./src/screens/admin/UserCalendarScreen";
 import { TeacherEventsScreen } from "./src/screens/teacher/TeacherEventsScreen";
 import { CreateEventScreen } from "./src/screens/teacher/CreateEventScreen";
 import { EditEventScreen } from "./src/screens/teacher/EditEventScreen";
 import { TeacherCalendarScreen } from "./src/screens/teacher/TeacherCalendarScreen";
-import { EditUserScreen } from "./src/screens/admin/EditUserScreen";
-import { UserCalendarScreen } from "./src/screens/admin/UserCalendarScreen";
 
-type Role = "student" | "teacher" | "admin";
+type UserRole = "student" | "teacher" | "admin";
+
+type SignedInUser = {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  classGroup: string;
+  attendance: string[];
+  calendar: string[];
+};
 
 type RootStackParamList = {
   SignIn: undefined;
@@ -27,34 +39,32 @@ type RootStackParamList = {
   CreateEvent: undefined;
   EditEvent: {
     event: {
-     id: string;
-     name: string;
+      id: string;
+      name: string;
       location: string;
-     startTime: string;
-     endTime: string;
-     classGroup: string;
-     teacher: string;
-   };
+      startTime: string;
+      endTime: string;
+      classGroup: string;
+      teacher: string;
+    };
   };
   TeacherCalendar: {
     teacher: string;
   };
   AdminUsers: undefined;
-
   EditUser: {
-   user: {
+    user: {
       id: string;
-     username: string;
-     name: string;
+      username: string;
+      name: string;
       email: string;
       password: string;
       role: "student" | "teacher" | "admin";
-     classGroup: string;
-     attendance: string[];
-     calendar: string[];
-   };
+      classGroup: string;
+      attendance: string[];
+      calendar: string[];
+    };
   };
-
   UserCalendar: {
     user: {
       id: string;
@@ -65,36 +75,28 @@ type RootStackParamList = {
       role: "student" | "teacher" | "admin";
       classGroup: string;
       attendance: string[];
-      alendar: string[];
+      calendar: string[];
     };
   };
-}
+};
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
-  const [role, setRole] = useState<Role | null>(null);
+  const [signedInUser, setSignedInUser] = useState<SignedInUser | null>(null);
 
   function signOut() {
-    setSignedInEmail(null);
-    setRole(null);
+    setSignedInUser(null);
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {!signedInEmail || !role ? (
+        {!signedInUser ? (
           <Stack.Screen name="SignIn" options={{ headerShown: false }}>
-            {() => (
-              <SignInScreen
-                onSignedIn={(email, selectedRole) => {
-                  setSignedInEmail(email);
-                  setRole(selectedRole);
-                }}
-              />
-            )}
+            {() => <SignInScreen onSignedIn={setSignedInUser} />}
           </Stack.Screen>
-        ) : role === "student" ? (
+        ) : signedInUser.role === "student" ? (
           <>
             <Stack.Screen name="StudentDashboard" options={{ title: "Student" }}>
               {({ navigation }) => (
@@ -109,7 +111,7 @@ export default function App() {
               {() => <ScanScreen onSignOut={signOut} />}
             </Stack.Screen>
           </>
-        ) : role === "teacher" ? (
+        ) : signedInUser.role === "teacher" ? (
           <>
             <Stack.Screen name="TeacherDashboard" options={{ title: "Teacher" }}>
               {({ navigation }) => (
@@ -119,7 +121,7 @@ export default function App() {
                   onCreateEvent={() => navigation.navigate("CreateEvent")}
                   onViewCalendar={() =>
                     navigation.navigate("TeacherCalendar", {
-                      teacher: signedInEmail || "teacher"
+                      teacher: signedInUser.username
                     })
                   }
                 />
@@ -138,17 +140,15 @@ export default function App() {
               component={CreateEventScreen}
             />
 
-            <Stack.Screen
-              name="EditEvent"
-              options={{ title: "Edit Event" }}
-              component={EditEventScreen}
-            />
+            <Stack.Screen name="EditEvent" options={{ title: "Edit Event" }}>
+              {({ route, navigation }) => (
+                <EditEventScreen route={route as any} navigation={navigation} />
+              )}
+            </Stack.Screen>
 
-            <Stack.Screen
-              name="TeacherCalendar"
-              options={{ title: "My Calendar" }}
-              component={TeacherCalendarScreen}
-            />
+            <Stack.Screen name="TeacherCalendar" options={{ title: "My Calendar" }}>
+              {({ route }) => <TeacherCalendarScreen route={route as any} />}
+            </Stack.Screen>
           </>
         ) : (
           <>
@@ -167,13 +167,14 @@ export default function App() {
               component={AdminUsersScreen}
             />
 
-            <Stack.Screen
-             name="EditUser"
-             options={{ title: "Edit User" }}
-             component={EditUserScreen}
-            />
+            <Stack.Screen name="EditUser" options={{ title: "Edit User" }}>
+              {({ route, navigation }) => (
+                <EditUserScreen route={route as any} navigation={navigation} />
+              )}
+            </Stack.Screen>
+
             <Stack.Screen name="UserCalendar" options={{ title: "User Calendar" }}>
-             {({ route }) => <UserCalendarScreen route={route as any} />}
+              {({ route }) => <UserCalendarScreen route={route as any} />}
             </Stack.Screen>
           </>
         )}
