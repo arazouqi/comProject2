@@ -4,11 +4,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
   onOpenCalendar: () => void;
+  onOpenAttendance: () => void;
   onSignOut: () => void;
 };
 
 export function StudentDashboard({
   onOpenCalendar,
+  onOpenAttendance,
   onSignOut
 }: Props) {
   return (
@@ -19,6 +21,7 @@ export function StudentDashboard({
 
       <View style={{ gap: 12 }}>
         <Button title="VIEW CALENDAR" onPress={onOpenCalendar} />
+        <Button title="ATTENDANCE" onPress={onOpenAttendance} />
         <Button title="SIGN OUT" onPress={onSignOut} />
       </View>
     </SafeAreaView>

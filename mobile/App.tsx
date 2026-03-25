@@ -15,6 +15,7 @@ import { CreateEventScreen } from "./src/screens/teacher/CreateEventScreen";
 import { EditEventScreen } from "./src/screens/teacher/EditEventScreen";
 import { TeacherCalendarScreen } from "./src/screens/teacher/TeacherCalendarScreen";
 import { StudentCalendarScreen } from "./src/screens/student/StudentCalendarScreen";
+import { AttendanceScreen } from "./src/screens/student/AttendanceScreen";
 
 type UserRole = "student" | "teacher" | "admin";
 
@@ -86,6 +87,10 @@ type RootStackParamList = {
     classGroup : string;
     studentEmail: string;
   };
+  Attendance: { 
+    classGroup: string;
+     studentEmail: string 
+    };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -106,16 +111,22 @@ export default function App() {
           </Stack.Screen>
         ) : signedInUser.role === "student" ? (
           <>
-            <Stack.Screen name="StudentDashboard" options={{ title: "Student" }}>
+           <Stack.Screen name="StudentDashboard" options={{ title: "Student" }}>
               {({ navigation }) => (
-               <StudentDashboard
+                <StudentDashboard
                   onOpenCalendar={() =>
                    navigation.navigate("StudentCalendar", {
                       classGroup: signedInUser.classGroup,
                       studentEmail: signedInUser.email
+                   })
+                 }
+                 onOpenAttendance={() =>
+                   navigation.navigate("Attendance", {
+                      classGroup: signedInUser.classGroup,
+                      studentEmail: signedInUser.email
                     })
                  }
-                  onSignOut={signOut}
+                 onSignOut={signOut}
                 />
               )}
             </Stack.Screen>
@@ -123,22 +134,26 @@ export default function App() {
            <Stack.Screen name="Scan" options={{ title: "Attendance Scanner" }}>
              {({ route, navigation }) => (
                <ScanScreen
-                 onSignOut={signOut}
+                  onSignOut={signOut}
                  route={route as any}
-                navigation={navigation}
+                 navigation={navigation}
                 />
               )}
-           </Stack.Screen>
+            </Stack.Screen>
 
-           <Stack.Screen name="StudentCalendar" options={{ title: "My Calendar" }}>
+            <Stack.Screen name="StudentCalendar" options={{ title: "My Calendar" }}>
              {({ route, navigation }) => (
-                <StudentCalendarScreen
-                  route={route as any}
-                  navigation={navigation}
+               <StudentCalendarScreen
+                 route={route as any}
+                 navigation={navigation}
                />
-              )}
-           </Stack.Screen>
-         </>
+             )}
+            </Stack.Screen>
+
+            <Stack.Screen name="Attendance" options={{ title: "My Attendance" }}>
+              {({ route }) => <AttendanceScreen route={route as any} />}
+            </Stack.Screen>
+          </>  
         ) : signedInUser.role === "teacher" ? (
           <>
             <Stack.Screen name="TeacherDashboard" options={{ title: "Teacher" }}>
