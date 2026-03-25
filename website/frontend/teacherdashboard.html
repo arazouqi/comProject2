@@ -14,17 +14,14 @@
 
     <div id="modal" class="modal">
         <div class="modal-content">
-            <h2>Edit User</h2>
-                <input id="editName">
-                <input id="editEmail" readonly>
+            <h2>Edit Event</h2>
+            <input id="name" name="name" placeholder="Name" required><br>
+            <input id="location" name="location" placeholder="Location" required><br>
+            <input id="start-time" type="date" name="start-time" placeholder="Start Time" required><br>
+            <input id="end-time" type="date" name="end-time" placeholder="End Time" required><br>
+            <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
 
-                <select id="editRole">
-                    <option>student</option>
-                    <option>teacher</option>
-                    <option>admin</option>
-                </select>
-
-                <button onclick="saveUser()" class="primary-btn">Save</button>
+            <button onclick="editCalendarEvent()" class="primary-btn">Modify</button>
         </div>
     </div>
 
@@ -62,7 +59,7 @@
                 card.innerHTML = `
                     <h3>${e.name}</h3>
                     <p>${new Date(e.startTime).toLocaleString()}-${new Date(e.endTime).toLocaleString()}</p>
-                    <button onclick="modify('${e._id}')">Modify</button>
+                    <button onclick="openModify('${e._id}')">Modify</button>
                     <button onclick="deleteEvent(this, '${e._id}')">Delete</button>
                     <button onclick="qr('${e._id}')">QR</button>
                 `
@@ -100,6 +97,16 @@
 
         function openCreate() {
             document.getElementById("modal-create").style.display = "flex"
+        }
+
+        async function openModify(id) {
+            const res = await fetch("/getevent/" + id, {
+                method: "GET"
+            })
+
+            const event = await res.json()
+
+            
         }
 
         async function createCalendarEvent() {

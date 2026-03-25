@@ -158,6 +158,14 @@ app.get("/events", async (req,res) => {
     res.json(events)
 })
 
+app.get("/getevent/:id", async (req, res) => {
+    const id = req.params.id
+
+    const event = await Event.find({ id })
+
+    res.json(event)
+})
+
 app.patch("/events/:id", async (req,res) => {
     await Event.findByIdAndUpdate(req.params.id,req.body)
     res.send("updated")
