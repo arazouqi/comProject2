@@ -161,7 +161,7 @@ app.get("/events", async (req,res) => {
 app.get("/getevent/:id", async (req, res) => {
     const id = req.params.id
 
-    const event = await Event.find({ id })
+    const event = await Event.findById(id)
 
     res.json(event)
 })

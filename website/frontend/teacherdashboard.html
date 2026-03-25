@@ -15,13 +15,14 @@
     <div id="modal" class="modal">
         <div class="modal-content">
             <h2>Edit Event</h2>
-            <input id="name" name="name" placeholder="Name" required><br>
-            <input id="location" name="location" placeholder="Location" required><br>
-            <input id="start-time" type="date" name="start-time" placeholder="Start Time" required><br>
-            <input id="end-time" type="date" name="end-time" placeholder="End Time" required><br>
-            <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
+            <input id="id" name="id" readonly><br>
+            <input id="editName" name="name" required><br>
+            <input id="editLocation" name="location" required><br>
+            <input id="edit-start-time" type="date" name="start-time" required><br>
+            <input id="edit-end-time" type="date" name="end-time" required><br>
+            <input id="editClassgroup" type="string" name="classgroup" required><br>
 
-            <button onclick="editCalendarEvent()" class="primary-btn">Modify</button>
+            <button onclick="updateCalendarEvent()" class="primary-btn">Modify</button>
         </div>
     </div>
 
@@ -106,7 +107,14 @@
 
             const event = await res.json()
 
-            
+            document.getElementById("id").value = id
+            document.getElementById("editName").value = event.name
+            document.getElementById("editLocation").value = event.location
+            document.getElementById("edit-start-time").value = event.startTime
+            document.getElementById("edit-end-time").value = event.endTime
+            document.getElementById("editClassgroup").value = event.classGroup
+
+            document.getElementById("modal").style.display = "flex"
         }
 
         async function createCalendarEvent() {
@@ -123,6 +131,25 @@
             })
 
             document.getElementById("modal-create").style.display = "none"
+
+            loadEvents()
+        }
+
+        async function updateCalendarEvent() {
+            const id = document.getElementById("id").value
+            const name = document.getElementById("editName").value
+            const location = document.getElementById("editLocation").value
+            const startTime = document.getElementById("edit-start-time").value
+            const endTime = document.getElementById("edit-end-time").value
+            const classGroup = document.getElementById("editClassgroup").value
+
+            await fetch("/events/"+id, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, location, startTime, endTime, classGroup })
+            })
+
+            document.getElementById("modal").style.display = "none"
 
             loadEvents()
         }
