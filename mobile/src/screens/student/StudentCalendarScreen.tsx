@@ -30,11 +30,14 @@ export function StudentCalendarScreen({ route, navigation }: Props) {
 
   async function fetchEvents() {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/events/class/${encodeURIComponent(classGroup)}`
-      );
+      const response = await fetch(`${API_BASE_URL}/api/events`);
       const data = await response.json();
-      setEvents(data);
+
+      const filtered = data.filter(
+        (event: EventItem) => event.classGroup === classGroup
+      );
+
+      setEvents(filtered);
     } catch (error) {
       console.error("Failed to fetch student events:", error);
       Alert.alert("Error", "Failed to fetch events.");
@@ -46,6 +49,22 @@ export function StudentCalendarScreen({ route, navigation }: Props) {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  function getAttendanceStatus(event: EventItem) {
+    const now = new Date();
+    const start = new Date(event.startTime);
+    const end = new Date(event.endTime);
+
+    if (now < start) return "not-open";
+    if (now > end) return "closed";
+    return "open";
+  }
+
+  function getStatusText(status: string) {
+    if (status === "not-open") return "Attendance not open yet";
+    if (status === "closed") return "Attendance closed";
+    return "Attendance open";
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
@@ -61,29 +80,42 @@ export function StudentCalendarScreen({ route, navigation }: Props) {
         <FlatList
           data={events}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                padding: 12,
-                borderWidth: 1,
-                borderRadius: 10,
-                marginBottom: 12,
-                gap: 8
-              }}
-            >
-              <Text style={{ fontWeight: "700" }}>{item.name}</Text>
-              <Text>Location: {item.location}</Text>
-              <Text>Start: {item.startTime}</Text>
-              <Text>End: {item.endTime}</Text>
-              <Text>Teacher: {item.teacher}</Text>
-              <Text>Class Group: {item.classGroup}</Text>
+          renderItem={({ item }) => {
+            const status = getAttendanceStatus(item);
 
-              <Button
-                title="SCAN ATTENDANCE"
-                onPress={() => navigation.navigate("Scan")}
-              />
-            </View>
-          )}
+            return (
+              <View
+                style={{
+                  padding: 12,
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  marginBottom: 12,
+                  gap: 8
+                }}
+              >
+                <Text style={{ fontWeight: "700" }}>{item.name}</Text>
+                <Text>Location: {item.location}</Text>
+                <Text>Start: {item.startTime}</Text>
+                <Text>End: {item.endTime}</Text>
+                <Text>Teacher: {item.teacher}</Text>
+                <Text>Class Group: {item.classGroup}</Text>
+                <Text>{getStatusText(status)}</Text>
+
+                {status === "open" ? (
+                  <Button
+                    title="SCAN ATTENDANCE"
+                    onPress={() => navigation.navigate("Scan")}
+                  />
+                ) : (
+                  <Button
+                    title={status === "not-open" ? "NOT OPEN YET" : "ATTENDANCE CLOSED"}
+                    onPress={() => {}}
+                    disabled
+                  />
+                )}
+              </View>
+            );
+          }}
         />
       )}
     </SafeAreaView>

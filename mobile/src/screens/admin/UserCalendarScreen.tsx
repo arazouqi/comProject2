@@ -19,13 +19,14 @@ type Props = {
   route: {
     params: {
       user: {
-        id: number;
+        id: string;
         username: string;
         role: UserRole;
         classGroup: string;
       };
     };
   };
+  navigation: any;
 };
 
 export function UserCalendarScreen({ route }: Props) {
@@ -75,13 +76,13 @@ export function UserCalendarScreen({ route }: Props) {
       {loading ? (
         <Text>Loading calendar...</Text>
       ) : user.role === "admin" ? (
-        <Text>Calendar view is not used for admin accounts in this MVP.</Text>
+        <Text>Calendar view is not used for admin accounts.</Text>
       ) : events.length === 0 ? (
         <Text>No events found for this user.</Text>
       ) : (
         <FlatList
           data={events}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View
               style={{

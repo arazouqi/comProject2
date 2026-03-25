@@ -167,35 +167,37 @@ export default function App() {
               {({ route }) => <TeacherCalendarScreen route={route as any} />}
             </Stack.Screen>
           </>
-        ) : (
-          <>
-            <Stack.Screen name="AdminDashboard" options={{ title: "Admin" }}>
-              {({ navigation }) => (
-                <AdminDashboard
-                  onSignOut={signOut}
-                  onManageUsers={() => navigation.navigate("AdminUsers")}
-                />
-              )}
-            </Stack.Screen>
+       ) : (
+        <>
+         <Stack.Screen name="AdminDashboard" options={{ title: "Admin" }}>
+            {({ navigation }) => (
+              <AdminDashboard
+               onSignOut={signOut}
+               onManageUsers={() => navigation.navigate("AdminUsers")}
+              />
+            )}
+         </Stack.Screen>
 
-            <Stack.Screen
-              name="AdminUsers"
-              options={{ title: "Manage Users" }}
-              component={AdminUsersScreen}
-            />
+         <Stack.Screen
+           name="AdminUsers"
+           options={{ title: "Manage Users" }}
+           component={AdminUsersScreen}
+         />
 
-            <Stack.Screen name="EditUser" options={{ title: "Edit User" }}>
-              {({ route, navigation }) => (
-                <EditUserScreen route={route as any} navigation={navigation} />
-              )}
-            </Stack.Screen>
+         <Stack.Screen name="EditUser" options={{ title: "Edit User" }}>
+           {({ route, navigation }) => (
+              <EditUserScreen route={route as any} navigation={navigation} />
+            )}
+          </Stack.Screen>
 
-            <Stack.Screen name="UserCalendar" options={{ title: "User Calendar" }}>
-              {({ route }) => <UserCalendarScreen route={route as any} />}
-            </Stack.Screen>
-          </>
-        )}
+         <Stack.Screen name="UserCalendar" options={{ title: "User Calendar" }}>
+            {({ route, navigation }) => (
+              <UserCalendarScreen route={route as any} navigation={navigation} />
+            )}
+          </Stack.Screen>
+               </>
+             )}
       </Stack.Navigator>
-    </NavigationContainer>
+   </NavigationContainer>
   );
 }
