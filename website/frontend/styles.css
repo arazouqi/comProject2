@@ -44,26 +44,28 @@ tr:hover{
     margin-top: 20px;
 }
 
-.modal{
+.modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.4);
+    right: 0;
+    bottom: 0;
+
+    background: rgba(0,0,0,0.6);
+
     justify-content: center;
     align-items: center;
+
+    z-index: 1000;
 }
 
-.modal-content{
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.modal-content {
+    background: #1f2937;
+    padding: 25px;
+    border-radius: 10px;
+    width: 400px;
+    color: white;
 }
 
 .login-body{
@@ -128,9 +130,13 @@ tr:hover{
     margin-top: 20px;
 }
 
-.danger-btn {
-    background: #dc2626;
+.danger-btn{
+    background: #cc2e2e;
     color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
 .secondary-btn {

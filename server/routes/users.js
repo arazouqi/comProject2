@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 
 const Users = require('../schemas/userSchema')
-const formatUser = require('../util/formatUser')
+const { formatUser } = require('../util/userUtil')
 const { allowedClassGroups, allowedRoles } = require("../util/constants")
 
 router.get("/", async (req, res) => {

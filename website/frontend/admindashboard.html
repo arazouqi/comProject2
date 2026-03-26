@@ -11,6 +11,7 @@
 
             <div class="controls">
                 <input id="search" placeholder="Search by name">
+                <p id="notification"></p>
                 <button class="primary-btn" onclick="openCreateModal()">Create User</button>
             </div>
 
@@ -37,18 +38,18 @@
             <div class="modal-content">
                 <h2>Edit User</h2>
 
-                <input id="id" readonly>
+                <input id="id" readonly><br>
 
-                <input id="editUsername" placeholder="Username">
-                <input id="editName" placeholder="Name">
-                <input id="editEmail" placeholder="Email">
-                <input id="editPassword" type="password" placeholder="New Password">
+                <input id="editUsername" placeholder="Username"><br>
+                <input id="editName" placeholder="Name"><br>
+                <input id="editEmail" placeholder="Email"><br>
+                <input id="editPassword" type="password" placeholder="New Password"><br>
 
                 <select id="editRole">
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
                     <option value="admin">Admin</option>
-                </select>
+                </select><br>
 
                 <select id="editClassGroup">
                     <option value="none">None</option>
@@ -72,9 +73,10 @@
                     <option value="music-studies-year-1">Music Year 1</option>
                     <option value="music-studies-year-2">Music Year 2</option>
                     <option value="music-studies-year-3">Music Year 3</option>
-                </select>
+                </select><br>
 
                 <button onclick="saveUser()" class="primary-btn">Save</button>
+                <button onclick="closeModal()" class="danger-btn">Close</button>
             </div>
         </div>
 
@@ -119,6 +121,7 @@
                 </select><br><br>
 
                 <button onclick="createUser()" class="primary-btn">Create</button>
+                <button onclick="closeCreateModal()" class="danger-btn">Close</button>
             </div>
         </div>
 
@@ -221,6 +224,14 @@
                 document.getElementById("modal-create").style.display = "flex"
             }
 
+            function closeModal() {
+                document.getElementById("modal").style.display = "none"
+            }
+
+            function closeCreateModal() {
+                document.getElementById("modal-create").style.display = "none"
+            }
+
             async function saveUser() {
                 const id = document.getElementById("id").value
                 const username = document.getElementById("editUsername").value
@@ -230,7 +241,7 @@
                 const role = document.getElementById("editRole").value
                 const classGroup = document.getElementById("editClassGroup").value
 
-                await fetch("/api/users/" + id, {
+                const res = await fetch("/api/users/" + id, {
                     method: "PUT",
                     headers: { "Content-Type":"application/json" },
                     body: JSON.stringify({
@@ -243,9 +254,17 @@
                     })
                 })
 
-                document.getElementById("modal").style.display="none"
+                if (res.status == 200) {
+                    document.getElementById("notification").innerText = "User successfully updated"
+                    document.getElementById("modal").style.display="none"
 
-                loadUsers()
+                    loadUsers()
+                } else {
+                    document.getElementById("notification").innerText = `Error ${res.status}: ${res.statusText}`
+                }
+
+                await new Promise(r => setTimeout(r, 2000));
+                document.getElementById("notification").innerText = ""
             }
 
             async function createUser() {

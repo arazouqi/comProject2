@@ -3,7 +3,6 @@
   <head>
     <title>Teacher Dashboard</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <link rel="stylesheet" href="styles.css">
   </head>
@@ -26,6 +25,7 @@
             <input id="editClassgroup" type="string" name="classgroup" required><br>
 
             <button onclick="updateCalendarEvent()" class="primary-btn">Modify</button>
+            <button onclick="closeModify()" class="danger-btn">Close</button>
         </div>
     </div>
 
@@ -40,15 +40,16 @@
             <input id="teacher" type="string" name="teacher" placeholder="Teacher" required><br>
 
             <button onclick="createCalendarEvent()" class="primary-btn">Create</button>
+            <button onclick="closeCreate()" class="danger-btn">Close</button>
         </div>
     </div>
 
     <div id="modal-qr" class="modal">
         <div class="modal-content">
             <h2>QR Code</h2>
-            <img id="qrImage" />
+            <img id="qrImage" src=""/><br>
 
-            <button onclick="closeQrModal()" class="primary-btn">Close</button>
+            <button onclick="closeQrModal()" class="danger-btn">Close</button>
         </div>
     </div>
 
@@ -132,14 +133,18 @@
         }
         
         async function deleteEventConfirm() {
-            if (!confirm("Delete this event?")) return
+            const btn = document.getElementById("deleteBtn")
 
-            await fetch("/api/events/" + selectedEventId, {
-                method: "DELETE"
-            })
+            if (btn.innerText === "Confirm") {
+                await fetch("/api/events/" + selectedEventId, {
+                    method: "DELETE"
+                })
 
-            closeEventModal()
-            location.reload()
+                closeEventModal()
+                window.location.reload()
+            } else {
+                btn.innerText = "Confirm"
+            }
         }
 
         async function qr(id) {
@@ -152,15 +157,21 @@
 
             qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${data.code}`
 
+            document.getElementById("eventModal").style.display = "none"
             document.getElementById("modal-qr").style.display = "flex"
         }
 
         function closeQrModal() {
             document.getElementById("modal-qr").style.display = "none"
+            document.getElementById("eventModal").style.display = "flex"
         }
 
         function openCreate() {
             document.getElementById("modal-create").style.display = "flex"
+        }
+
+        function closeCreate() {
+            document.getElementById("modal-create").style.display = "none"
         }
 
         async function openModify(id) {
@@ -177,7 +188,13 @@
             document.getElementById("edit-end-time").value = toDatetimeLocal(event.endTime)
             document.getElementById("editClassgroup").value = event.classGroup
 
+            document.getElementById("eventModal").style.display = "none"
             document.getElementById("modal").style.display = "flex"
+        }
+
+        function closeModify() {
+            document.getElementById("modal").style.display = "none"
+            document.getElementById("eventModal").style.display = "flex"
         }
 
         async function createCalendarEvent() {
@@ -197,7 +214,7 @@
             document.getElementById("modal-create").style.display = "none"
 
             calendar.refetchEvents()
-            location.reload()
+            window.location.reload()
         }
 
         async function updateCalendarEvent() {
@@ -215,9 +232,10 @@
             })
 
             document.getElementById("modal").style.display = "none"
+            document.getElementById("eventModal").style.display = "flex"
 
             calendar.refetchEvents()
-            location.reload()
+            window.location.reload()
         }
 
         loadEvents()

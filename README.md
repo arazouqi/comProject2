@@ -4,10 +4,9 @@
 Ansh Matieda
 Nadir Ktir
 Luca Lunghi
-Arej
-Luiza
-Max
-Arej
+Areij Khan
+Luiza Halilaj
+Max Bailey
 
 ## participants making the website and app
 Nadir Ktir
@@ -51,15 +50,15 @@ npx expo start -c
 use the website (teacher role) to generate the qr code and then scan the qr code presented using the mobile app installed (Expo Go) on a student account
 
 ### logins to use (can use other ones that are in the databse)
-teacher acocunt:
+teacher account:
 username -> Nabibby (can use the email instead)
 password -> 1234
 
-student acocunt:
+student account:
 username -> Big Z (can use the email instead)
 password -> 1234
 
-admin acocunt:
+admin account:
 username -> Luca (can use the email instead)
 password -> 1234
 

@@ -12,4 +12,15 @@ function formatEvent(event) {
     }
 }
 
-module.exports = formatEvent
+function checkCollisions(events, newEvent) {
+    for (e in events) {
+        if (e.location == newEvent.location) {
+            return ((e.startTime > newEvent.startTime && e.startTime < newEvent.endTime) ||
+                    (newEvent.startTime > e.startTime && newEvent.startTime < e.endTime))
+        }
+    }
+
+    return false
+}
+
+module.exports = { formatEvent, checkCollisions }
