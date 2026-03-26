@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Teacher Dashboard</title>
+    
     <link rel="stylesheet" href="styles.css">
   </head>
 
@@ -18,8 +19,8 @@
             <input id="id" name="id" readonly><br>
             <input id="editName" name="name" required><br>
             <input id="editLocation" name="location" required><br>
-            <input id="edit-start-time" type="date" name="start-time" required><br>
-            <input id="edit-end-time" type="date" name="end-time" required><br>
+            <input id="edit-start-time" type="datetime-local" name="start-time" required><br>
+            <input id="edit-end-time" type="datetime-local" name="end-time" required><br>
             <input id="editClassgroup" type="string" name="classgroup" required><br>
 
             <button onclick="updateCalendarEvent()" class="primary-btn">Modify</button>
@@ -31,8 +32,8 @@
             <h2>Create Event</h2>
             <input id="name" name="name" placeholder="Name" required><br>
             <input id="location" name="location" placeholder="Location" required><br>
-            <input id="start-time" type="date" name="start-time" placeholder="Start Time" required><br>
-            <input id="end-time" type="date" name="end-time" placeholder="End Time" required><br>
+            <input id="start-time" type="datetime-local" name="start-time" placeholder="Start Time" required><br>
+            <input id="end-time" type="datetime-local" name="end-time" placeholder="End Time" required><br>
             <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
             <input id="teacher" type="string" name="teacher" placeholder="Teacher" required><br>
 
@@ -50,33 +51,54 @@
     </div>
 
     <script>
+        function toDatetimeLocal(date) {
+            const d = new Date(date)
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+            return d.toISOString().slice(0,16)
+        }
+
         async function loadEvents() {
             const res = await fetch("/api/events/", { method: "GET" })
             const events = await res.json()
             const cal = document.getElementById("calendar")
             cal.innerHTML = ""
+            
             events.forEach(e => {
+                const start = new Date(e.startTime)
+                const end = new Date(e.endTime)
                 const card = document.createElement("div")
                 card.className = "event-card"
+
                 card.innerHTML = `
                     <h3>${e.name}</h3>
-                    <p>${new Date(e.startTime).toLocaleString()}-${new Date(e.endTime).toLocaleString()}</p>
+
+                    <p>
+                    ${start.toLocaleDateString()}  
+                    ${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+                    -
+                    ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+                    </p>
+
+                    <p>${e.location}</p>
+
                     <button onclick="openModify('${e.id}')">Modify</button>
-                    <button onclick="deleteEvent(this, '${e.id}')">Delete</button>
+                    <button onclick="deleteEvent(this,'${e.id}')">Delete</button>
                     <button onclick="qr('${e.id}')">QR</button>
                 `
+
                 cal.appendChild(card)
             })
         }
         
         async function deleteEvent(btn,id) {
-            if (btn.innerText==="Confirm") {
-                await fetch("/api/events/" + id, { 
-                    method: "DELETE"
-                })
+            if (btn.innerText === "Confirm") {
+                await fetch("/api/events/" + id, { method: "DELETE" })
                 loadEvents()
             } else {
-                btn.innerText="Confirm"
+                btn.innerText = "Confirm"
+                setTimeout(() => {
+                    btn.innerText = "Delete"
+                }, 15000)
             }
         }
 
@@ -111,8 +133,8 @@
             document.getElementById("id").value = id
             document.getElementById("editName").value = event.name
             document.getElementById("editLocation").value = event.location
-            document.getElementById("edit-start-time").value = event.startTime
-            document.getElementById("edit-end-time").value = event.endTime
+            document.getElementById("edit-start-time").value = toDatetimeLocal(event.startTime)
+            document.getElementById("edit-end-time").value = toDatetimeLocal(event.endTime)
             document.getElementById("editClassgroup").value = event.classGroup
 
             document.getElementById("modal").style.display = "flex"
