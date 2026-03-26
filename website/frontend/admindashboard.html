@@ -36,14 +36,42 @@
         <div id="modal" class="modal">
             <div class="modal-content">
                 <h2>Edit User</h2>
+
                 <input id="id" readonly>
-                <input id="editName">
-                <input id="editEmail">
+
+                <input id="editUsername" placeholder="Username">
+                <input id="editName" placeholder="Name">
+                <input id="editEmail" placeholder="Email">
+                <input id="editPassword" type="password" placeholder="New Password">
 
                 <select id="editRole">
-                    <option>student</option>
-                    <option>teacher</option>
-                    <option>admin</option>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select>
+
+                <select id="editClassGroup">
+                    <option value="none">None</option>
+
+                    <option value="computer-science-year-1">CS Year 1</option>
+                    <option value="computer-science-year-2">CS Year 2</option>
+                    <option value="computer-science-year-3">CS Year 3</option>
+
+                    <option value="mathematics-year-1">Maths Year 1</option>
+                    <option value="mathematics-year-2">Maths Year 2</option>
+                    <option value="mathematics-year-3">Maths Year 3</option>
+
+                    <option value="psychology-year-1">Psychology Year 1</option>
+                    <option value="psychology-year-2">Psychology Year 2</option>
+                    <option value="psychology-year-3">Psychology Year 3</option>
+
+                    <option value="business-year-1">Business Year 1</option>
+                    <option value="business-year-2">Business Year 2</option>
+                    <option value="business-year-3">Business Year 3</option>
+
+                    <option value="music-studies-year-1">Music Year 1</option>
+                    <option value="music-studies-year-2">Music Year 2</option>
+                    <option value="music-studies-year-3">Music Year 3</option>
                 </select>
 
                 <button onclick="saveUser()" class="primary-btn">Save</button>
@@ -53,29 +81,59 @@
         <div id="modal-create" class="modal">
             <div class="modal-content">
                 <h2>Create User</h2>
-                    <input id="name" name="name" placeholder="Name" required><br>
-                    <input id="email" name="email" placeholder="Email" required><br>
-                    <input id="password" type="password" name="password" placeholder="Password" required><br>
 
-                    <select id="role" name="role" required>
-                        <option value="">Select role</option>
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="admin">Admin</option>
-                    </select><br><br>
+                <input id="username" placeholder="Username" required><br>
+                <input id="name" placeholder="Name" required><br>
+                <input id="email" placeholder="Email" required><br>
+                <input id="password" type="password" placeholder="Password" required><br>
 
-                    <button onclick="createUser()" class="primary-btn">Create</button>
+                <select id="role" required>
+                    <option value="">Select role</option>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select><br>
+
+                <select id="classGroup" required>
+                    <option value="none">None</option>
+
+                    <option value="computer-science-year-1">CS Year 1</option>
+                    <option value="computer-science-year-2">CS Year 2</option>
+                    <option value="computer-science-year-3">CS Year 3</option>
+
+                    <option value="mathematics-year-1">Maths Year 1</option>
+                    <option value="mathematics-year-2">Maths Year 2</option>
+                    <option value="mathematics-year-3">Maths Year 3</option>
+
+                    <option value="psychology-year-1">Psychology Year 1</option>
+                    <option value="psychology-year-2">Psychology Year 2</option>
+                    <option value="psychology-year-3">Psychology Year 3</option>
+
+                    <option value="business-year-1">Business Year 1</option>
+                    <option value="business-year-2">Business Year 2</option>
+                    <option value="business-year-3">Business Year 3</option>
+
+                    <option value="music-studies-year-1">Music Year 1</option>
+                    <option value="music-studies-year-2">Music Year 2</option>
+                    <option value="music-studies-year-3">Music Year 3</option>
+                </select><br><br>
+
+                <button onclick="createUser()" class="primary-btn">Create</button>
             </div>
         </div>
 
         <script>
-            let users=[]
-            let page=0
-            const pageSize=10
+            let allUsers = []
+            let filteredUsers = []
+            let page = 0
+            const pageSize = 10
 
             async function loadUsers() {
                 const res = await fetch("/api/users/")
-                users = await res.json()
+                allUsers = await res.json()
+                filteredUsers = allUsers
+                page = 0
+
                 render()
             }
 
@@ -83,47 +141,57 @@
                 const body=document.getElementById("users")
                 body.innerHTML=""
 
-                const start=page*pageSize
-                const data=users.slice(start,start+pageSize)
+                const start = page * pageSize
+                const data = filteredUsers.slice(start, start+pageSize)
 
-                data.forEach(u=>{
-                    const row=document.createElement("tr")
-                    row.innerHTML=`
-                    <td>${u.name}</td>
-                    <td>${u.email}</td>
-                    <td>${u.role}</td>
+                data.forEach((u) => {
+                    const row = document.createElement("tr")
+                    row.innerHTML = `
+                        <td>${u.name}</td>
+                        <td>${u.email}</td>
+                        <td>${u.role}</td>
 
-                    <td>
-                        <button onclick="openModal('${u.id}')">Modify</button>
-                        <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
-                    </td>
+                        <td>
+                            <button onclick="openModal('${u.id}')">Modify</button>
+                            <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
+                        </td>
                     `
                     body.appendChild(row)
                 })
 
-                document.getElementById("page").innerText=`Page ${page+1}`
+                const totalPages = Math.ceil(filteredUsers.length / pageSize)
+
+                document.getElementById("page").innerText=`Page ${page+1} / ${Math.max(totalPages, 1)}`
             }
 
-            function nextPage(){
-                page++
+            function nextPage() {
+                const maxPage = Math.ceil(filteredUsers.length / pageSize) - 1
+
+                if (page < maxPage) {
+                    page++
+                    render()
+                }
+            }
+
+            function prevPage() {
+                if (page > 0) {
+                    page--
+                    render()
+                }
+            }
+
+            document.getElementById("search").oninput = e => {
+                const q = e.target.value.toLowerCase()
+
+                filteredUsers = allUsers.filter(u =>
+                    u.name.toLowerCase().includes(q)
+                )
+
+                page = 0
                 render()
             }
 
-            function prevPage(){
-                if(page>0) page--
-                render()
-            }
-
-            document.getElementById("search").oninput=e=>{
-                const q=e.target.value.toLowerCase()
-                const filtered=users.filter(u=>u.name.toLowerCase().includes(q))
-
-                users=filtered
-                page=0
-                render()
-            }
-
-            async function confirmDelete(btn, id){
+            async function confirmDelete(btn, id) {
                 if (btn.innerText === "Confirm") {
                     await fetch("/api/users/" + id, { 
                         method: "DELETE"
@@ -131,20 +199,21 @@
 
                     loadUsers()
                 } else {
-                    btn.innerText="Confirm"
+                    btn.innerText = "Confirm"
                 }
             }
 
             async function openModal(id) {
-                const res = await fetch("/api/users/" + id, { 
-                    method: "GET"
-                })
+                const res = await fetch("/api/users/" + id)
                 const user = await res.json()
 
                 document.getElementById("id").value = id
+                document.getElementById("editUsername").value = user.username
                 document.getElementById("editName").value = user.name
                 document.getElementById("editEmail").value = user.email
                 document.getElementById("editRole").value = user.role
+                document.getElementById("editClassGroup").value = user.classGroup
+
                 document.getElementById("modal").style.display = "flex"
             }
 
@@ -154,14 +223,24 @@
 
             async function saveUser() {
                 const id = document.getElementById("id").value
+                const username = document.getElementById("editUsername").value
                 const name = document.getElementById("editName").value
                 const email = document.getElementById("editEmail").value
+                const password = document.getElementById("editPassword").value
                 const role = document.getElementById("editRole").value
+                const classGroup = document.getElementById("editClassGroup").value
 
                 await fetch("/api/users/" + id, {
-                    method:"PUT",
-                    headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({ email, name, role })
+                    method: "PUT",
+                    headers: { "Content-Type":"application/json" },
+                    body: JSON.stringify({
+                        username,
+                        name,
+                        email,
+                        password,
+                        role,
+                        classGroup
+                    })
                 })
 
                 document.getElementById("modal").style.display="none"
@@ -170,15 +249,24 @@
             }
 
             async function createUser() {
+                const username = document.getElementById("username").value
                 const name = document.getElementById("name").value
                 const email = document.getElementById("email").value
                 const password = document.getElementById("password").value
                 const role = document.getElementById("role").value
+                const classGroup = document.getElementById("classGroup").value
 
                 await fetch("/api/users/", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, name, password, role })
+                    body: JSON.stringify({
+                        username,
+                        name,
+                        email,
+                        password,
+                        role,
+                        classGroup
+                    })
                 })
 
                 document.getElementById("modal-create").style.display = "none"
