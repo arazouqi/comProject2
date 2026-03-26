@@ -89,7 +89,8 @@ type RootStackParamList = {
   };
   Attendance: { 
     classGroup: string;
-     studentEmail: string 
+    studentEmail: string;
+    studentName?: string;
     };
 };
 
@@ -221,8 +222,12 @@ export default function App() {
               <UserCalendarScreen route={route as any} navigation={navigation} />
             )}
           </Stack.Screen>
-               </>
-             )}
+
+          <Stack.Screen name="Attendance" options={{ title: "Attendance" }}>
+           {({ route }) => <AttendanceScreen route={route as any} />}
+          </Stack.Screen>
+        </>
+      )}
       </Stack.Navigator>
    </NavigationContainer>
   );

@@ -231,6 +231,19 @@ export function AdminUsersScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("UserCalendar", { user: item })}
             />
 
+          {item.role === "student" && (
+             <Button
+              title="View Attendance"
+              onPress={() =>
+                navigation.navigate("Attendance", {
+                 classGroup: item.classGroup,
+                  studentEmail: item.email,
+                  studentName: item.username
+                })
+              }
+            />
+          )}
+
             <Button
               title="Delete User"
               onPress={() => handleDeleteUser(item.id)}
