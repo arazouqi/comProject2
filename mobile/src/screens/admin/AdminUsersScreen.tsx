@@ -226,10 +226,12 @@ export function AdminUsersScreen({ navigation }: Props) {
               onPress={() => navigation.navigate("EditUser", { user: item })}
             />
 
+            {(item.role === "student" || item.role === "teacher") && (
             <Button
               title="View User Calendar"
               onPress={() => navigation.navigate("UserCalendar", { user: item })}
             />
+            )}
 
           {item.role === "student" && (
              <Button
