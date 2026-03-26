@@ -49,6 +49,8 @@ npx expo start -c
 ```
 use the website (teacher role) to generate the qr code and then scan the qr code presented using the mobile app installed (Expo Go) on a student account
 
+(i've made it so that you can only scan the qr code for attendence during the time and date of the event not before or after, so make an event using the teacher role that is happening now, and then scan the qr code from the website for attendence)
+
 ### logins to use (can use other ones that are in the databse)
 teacher account:
 username -> Nabibby (can use the email instead)
