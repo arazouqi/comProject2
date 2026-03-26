@@ -47,7 +47,7 @@ start the app in a seperate terminal:
 cd mobile
 npx expo start -c
 ```
-then scan the qr code presented using the mobile app installed (Expo Go)
+use the website (teacher role) to generate the qr code and then scan the qr code presented using the mobile app installed (Expo Go) on a student account
 
 ### logins to use (can use other ones that are in the databse)
 teacher account:
