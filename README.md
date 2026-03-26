@@ -47,9 +47,13 @@ start the app in a seperate terminal:
 cd mobile
 npx expo start -c
 ```
-use the website (teacher role) to generate the qr code and then scan the qr code presented using the mobile app installed (Expo Go) on a student account
 
-(i've made it so that you can only scan the qr code for attendence during the time and date of the event not before or after, so make an event using the teacher role that is happening now, and then scan the qr code from the website for attendence)
+scan the QR code on the Expo Go app to load the mobile app
+
+
+use the website (teacher role) to generate the qr code and then scan the qr code presented using the mobile app  on a student account
+
+(i've made it so that you can only scan the qr code for attendence during the time and date of the event not before or after, so make an event using the teacher role that is happening now, and then scan the qr code from the website for attendence on a student account)
 
 ### logins to use (can use other ones that are in the databse)
 teacher account:
