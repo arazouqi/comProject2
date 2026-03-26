@@ -24,6 +24,7 @@ router.post("/login", async (req, res) => {
 
         req.session.user = user.email
         req.session.role = user.role
+        req.session.classgroup = user.classGroup
         
         res.json({
             success: true,
@@ -63,6 +64,18 @@ router.post("/mobile", async (req, res) => {
         console.log(err)
         res.status(500).json({ error: "Login failed" })
     }
+})
+
+router.get("/getloggedin", (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: "User not logged in" })
+    }
+
+    res.json({
+        success: true,
+        email: req.session.user,
+        classgroup: req.session.classgroup
+    })
 })
 
 module.exports = router

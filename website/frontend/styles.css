@@ -142,4 +142,8 @@ tr:hover{
 .secondary-btn {
     background: #6b7280;
     color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
 }
