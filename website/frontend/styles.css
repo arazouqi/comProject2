@@ -104,3 +104,36 @@ tr:hover{
 .event-card h3 {
   margin-top: 0;
 }
+
+.fc-event {
+    background: #2563eb;
+    border: none;
+    border-radius: 6px;
+    padding: 4px;
+    font-size: 13px;
+}
+
+.fc-event:hover {
+    background: #1d4ed8;
+    cursor: pointer;
+}
+
+.event-modal {
+    width: 400px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.danger-btn {
+    background: #dc2626;
+    color: white;
+}
+
+.secondary-btn {
+    background: #6b7280;
+    color: white;
+}

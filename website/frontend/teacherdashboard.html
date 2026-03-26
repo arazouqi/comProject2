@@ -3,6 +3,8 @@
   <head>
     <title>Teacher Dashboard</title>
     
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <link rel="stylesheet" href="styles.css">
   </head>
 
@@ -10,7 +12,7 @@
     <div class="dashboard">
       <h1>Events Calendar</h1>
       <button onclick="openCreate()" class="primary-btn">Create Event</button>
-      <div id="calendar" class="calendar"></div>
+      <div id="calendar"></div>
     </div>
 
     <div id="modal" class="modal">
@@ -50,6 +52,23 @@
         </div>
     </div>
 
+    <div id="eventModal" class="modal">
+        <div class="modal-content event-modal">
+            <h2 id="eventTitle"></h2>
+            <p><strong>Location:</strong> <span id="eventLocation"></span></p>
+            <p><strong>Class Group:</strong> <span id="eventClass"></span></p>
+            <p><strong>Start:</strong> <span id="eventStart"></span></p>
+            <p><strong>End:</strong> <span id="eventEnd"></span></p>
+
+            <div class="modal-actions">
+                <button id="modifyBtn" class="primary-btn">Modify</button>
+                <button id="deleteBtn" class="danger-btn">Delete</button>
+                <button id="qrBtn" class="secondary-btn">Generate QR</button>
+                <button onclick="closeEventModal()" class="secondary-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function toDatetimeLocal(date) {
             const d = new Date(date)
@@ -57,49 +76,70 @@
             return d.toISOString().slice(0,16)
         }
 
+        let calendar
+        let selectedEventId = null
+
+        function openEventModal(event) {
+            selectedEventId = event.id
+
+            document.getElementById("eventTitle").innerText = event.title
+            document.getElementById("eventLocation").innerText = event.extendedProps.location
+            document.getElementById("eventClass").innerText = event.extendedProps.classGroup
+            document.getElementById("eventStart").innerText = new Date(event.start).toLocaleString()
+            document.getElementById("eventEnd").innerText = new Date(event.end).toLocaleString()
+
+            document.getElementById("modifyBtn").onclick = () => openModify(selectedEventId)
+            document.getElementById("deleteBtn").onclick = () => deleteEventConfirm()
+            document.getElementById("qrBtn").onclick = () => qr(selectedEventId)
+
+            document.getElementById("eventModal").style.display = "flex"
+        }
+
+        function closeEventModal() {
+            document.getElementById("eventModal").style.display = "none"
+        }
+
         async function loadEvents() {
-            const res = await fetch("/api/events/", { method: "GET" })
+            const res = await fetch("/api/events/")
             const events = await res.json()
-            const cal = document.getElementById("calendar")
-            cal.innerHTML = ""
-            
-            events.forEach(e => {
-                const start = new Date(e.startTime)
-                const end = new Date(e.endTime)
-                const card = document.createElement("div")
-                card.className = "event-card"
 
-                card.innerHTML = `
-                    <h3>${e.name}</h3>
+            const formattedEvents = events.map(e => ({
+                id: e.id,
+                title: e.name,
+                start: e.startTime,
+                end: e.endTime,
+                extendedProps: {
+                    location: e.location,
+                    classGroup: e.classGroup
+                }
+            }))
 
-                    <p>
-                    ${start.toLocaleDateString()}  
-                    ${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
-                    -
-                    ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
-                    </p>
-
-                    <p>${e.location}</p>
-
-                    <button onclick="openModify('${e.id}')">Modify</button>
-                    <button onclick="deleteEvent(this,'${e.id}')">Delete</button>
-                    <button onclick="qr('${e.id}')">QR</button>
-                `
-
-                cal.appendChild(card)
+            const calendarEl = document.getElementById("calendar")
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: "dayGridMonth",
+                headerToolbar: {
+                    left: "prev,next today",
+                    center: "title",
+                    right: "dayGridMonth,timeGridWeek,timeGridDay"
+                },
+                events: formattedEvents,
+                eventClick: function(info) {
+                    openEventModal(info.event)
+                },
             })
+
+            calendar.render()
         }
         
-        async function deleteEvent(btn,id) {
-            if (btn.innerText === "Confirm") {
-                await fetch("/api/events/" + id, { method: "DELETE" })
-                loadEvents()
-            } else {
-                btn.innerText = "Confirm"
-                setTimeout(() => {
-                    btn.innerText = "Delete"
-                }, 15000)
-            }
+        async function deleteEventConfirm() {
+            if (!confirm("Delete this event?")) return
+
+            await fetch("/api/events/" + selectedEventId, {
+                method: "DELETE"
+            })
+
+            closeEventModal()
+            location.reload()
         }
 
         async function qr(id) {
@@ -156,7 +196,8 @@
 
             document.getElementById("modal-create").style.display = "none"
 
-            loadEvents()
+            calendar.refetchEvents()
+            location.reload()
         }
 
         async function updateCalendarEvent() {
@@ -175,7 +216,8 @@
 
             document.getElementById("modal").style.display = "none"
 
-            loadEvents()
+            calendar.refetchEvents()
+            location.reload()
         }
 
         loadEvents()
