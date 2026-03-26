@@ -4,10 +4,9 @@
 Ansh Matieda
 Nadir Ktir
 Luca Lunghi
-Arej
-Luiza
-Max
-Arej
+Areij Khan
+Luiza Halilaj
+Max Bailey
 
 ## participants making the website and app
 Nadir Ktir
