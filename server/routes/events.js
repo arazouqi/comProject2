@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 
 const Event = require("../schemas/eventSchema")
-const formatEvent = require("../util/formatEvent")
+const { formatEvent, checkCollisions } = require("../util/eventUtil")
 const { allowedClassGroups } = require("../util/constants")
 
 router.get("/", async (req, res) => {
@@ -44,6 +44,8 @@ router.post("/", async (req, res) => {
             return res.status(400).json({ error: "Invalid class group" })
         }
 
+        const events = await (await Event.find()).map(formatEvent)
+
         const event = await Event.create({
             name,
             location,
@@ -54,6 +56,10 @@ router.post("/", async (req, res) => {
             qrCode: "",
             attendees: []
         })
+
+        if (checkCollisions(events, event)) {
+            res.status(400).json({ error: "There is already an event at this location and time" })
+        }
 
         res.status(201).json(formatEvent(event))
     } catch (err) {

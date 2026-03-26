@@ -12,4 +12,4 @@ function formatUser(user) {
     }
 }
 
-module.exports = formatUser
+module.exports = { formatUser }

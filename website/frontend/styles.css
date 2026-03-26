@@ -130,9 +130,13 @@ tr:hover{
     margin-top: 20px;
 }
 
-.danger-btn {
-    background: #dc2626;
+.danger-btn{
+    background: #cc2e2e;
     color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
 .secondary-btn {

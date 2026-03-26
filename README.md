@@ -51,15 +51,15 @@ npx expo start -c
 then scan the qr code presented using the mobile app installed (Expo Go)
 
 ### logins to use (can use other ones that are in the databse)
-teacher acocunt:
+teacher account:
 username -> Nabibby (can use the email instead)
 password -> 1234
 
-student acocunt:
+student account:
 username -> Big Z (can use the email instead)
 password -> 1234
 
-admin acocunt:
+admin account:
 username -> Luca (can use the email instead)
 password -> 1234
 

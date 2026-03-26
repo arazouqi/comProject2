@@ -25,6 +25,7 @@
             <input id="editClassgroup" type="string" name="classgroup" required><br>
 
             <button onclick="updateCalendarEvent()" class="primary-btn">Modify</button>
+            <button onclick="closeModify()" class="danger-btn">Close</button>
         </div>
     </div>
 
@@ -39,15 +40,16 @@
             <input id="teacher" type="string" name="teacher" placeholder="Teacher" required><br>
 
             <button onclick="createCalendarEvent()" class="primary-btn">Create</button>
+            <button onclick="closeCreate()" class="danger-btn">Close</button>
         </div>
     </div>
 
     <div id="modal-qr" class="modal">
         <div class="modal-content">
             <h2>QR Code</h2>
-            <img id="qrImage" />
+            <img id="qrImage" src=""/><br>
 
-            <button onclick="closeQrModal()" class="primary-btn">Close</button>
+            <button onclick="closeQrModal()" class="danger-btn">Close</button>
         </div>
     </div>
 
@@ -168,6 +170,10 @@
             document.getElementById("modal-create").style.display = "flex"
         }
 
+        function closeCreate() {
+            document.getElementById("modal-create").style.display = "none"
+        }
+
         async function openModify(id) {
             const res = await fetch("/api/events/" + id, {
                 method: "GET"
@@ -184,6 +190,11 @@
 
             document.getElementById("eventModal").style.display = "none"
             document.getElementById("modal").style.display = "flex"
+        }
+
+        function closeModify() {
+            document.getElementById("modal").style.display = "none"
+            document.getElementById("eventModal").style.display = "flex"
         }
 
         async function createCalendarEvent() {
