@@ -19,12 +19,13 @@ type Props = {
     params: {
       classGroup: string;
       studentEmail: string;
+      studentName?: string;
     };
   };
 };
 
 export function AttendanceScreen({ route }: Props) {
-  const { classGroup, studentEmail } = route.params;
+  const { classGroup, studentEmail, studentName } = route.params;
 
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +83,7 @@ export function AttendanceScreen({ route }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, padding: 16 }}>
       <Text style={{ fontSize: 24, fontWeight: "700", marginBottom: 16 }}>
-        My Attendance
+        {studentName ? `${studentName}'s Attendance` : "My Attendance"}
       </Text>
 
       {loading ? (
