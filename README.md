@@ -15,3 +15,55 @@ Luca Lunghi
 
 ## Description
 Shared repository for our school project.
+
+## Mobile app
+
+### requirements 
+- Node.js installed
+- Expo Go app installed on your phone
+
+
+### Install dependencies
+
+```bash
+cd mobile
+npm install
+```
+
+and for backend:
+```bash
+cd server
+npm install
+```
+
+### running the app
+start the backend server in one terminal:
+```bash
+cd server
+npm start
+```
+
+start the app in a seperate terminal:
+```bash
+cd mobile
+npx expo start -c
+```
+then scan the qr code presented using the mobile app installed (Expo Go)
+
+### logins to use (can use other ones that are in the databse)
+teacher acocunt:
+username -> Nabibby (can use the email instead)
+password -> 1234
+
+student acocunt:
+username -> Big Z (can use the email instead)
+password -> 1234
+
+admin acocunt:
+username -> Luca (can use the email instead)
+password -> 1234
+
+
+## access the website
+make sure the server is running first, then put this in the browser:
+http://localhost:3000/signin.html
