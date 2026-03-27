@@ -4,6 +4,7 @@ const router = express.Router()
 const Event = require("../schemas/eventSchema")
 const { formatEvent, checkCollisions } = require("../util/eventUtil")
 const { allowedClassGroups } = require("../util/constants")
+const { processLowAttendanceWarnings } = require("../jobs/lowAttendanceJob")
 
 router.get("/", async (req, res) => {
     try {
@@ -12,6 +13,16 @@ router.get("/", async (req, res) => {
     } catch (err) {
         console.log(err)
         res.status(500).json({ error: "Error fetching events" })
+    }
+})
+
+router.get("/run-low-attendance-check", async (req, res) => {
+    try {
+        await processLowAttendanceWarnings()
+        res.json({ success: true, message: "Low attendance check completed" })
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Failed to run low attendance check" })
     }
 })
 
@@ -44,7 +55,25 @@ router.post("/", async (req, res) => {
             return res.status(400).json({ error: "Invalid class group" })
         }
 
-        const events = await (await Event.find()).map(formatEvent)
+        const existingEvents = (await Event.find()).map(formatEvent)
+
+        const newEvent = {
+            id: "temp",
+            name,
+            location,
+            startTime,
+            endTime,
+            classGroup,
+            teacher,
+            qrCode: "",
+            attendees: []
+        }
+
+        if (checkCollisions(existingEvents, newEvent)) {
+            return res.status(400).json({
+                error: "There is already an event at this location and time"
+            })
+        }
 
         const event = await Event.create({
             name,
@@ -56,10 +85,6 @@ router.post("/", async (req, res) => {
             qrCode: "",
             attendees: []
         })
-
-        if (checkCollisions(events, event)) {
-            res.status(400).json({ error: "There is already an event at this location and time" })
-        }
 
         res.status(201).json(formatEvent(event))
     } catch (err) {
