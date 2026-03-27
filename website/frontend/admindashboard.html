@@ -2,6 +2,8 @@
 <html>
     <head>
         <title>Admin Dashboard</title>
+
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
         <link rel="stylesheet" href="styles.css">
     </head>
 
@@ -125,11 +127,111 @@
             </div>
         </div>
 
+        <div id="calendarModal" class="modal">
+            <div class="modal-content attendance-modal">
+                <h2>User Events</h2>
+                <div id="adminEventList" class="attendance-list"></div>
+                <div class="pagination">
+                    <button onclick="prevEventPage()">Prev</button>
+                    <span id="eventPage"></span>
+                    <button onclick="nextEventPage()">Next</button>
+                </div>
+                <button onclick="closeCalendar()" class="danger-btn">Close</button>
+            </div>
+        </div>
+
+        <div id="attendanceModal" class="modal">
+            <div class="modal-content attendance-modal">
+                <h2>User Attendance</h2>
+                <div class="attendance-summary">
+                    <p><strong>Attendance:</strong> <span id="adminAttendancePercent"></span></p>
+                    <p>Attended: <span id="adminAttended"></span></p>
+                    <p>Missed: <span id="adminMissed"></span></p>
+                </div>
+                <div id="adminAttendanceList" class="attendance-list"></div>
+
+                <div class="pagination">
+                    <button onclick="prevAttendancePage()">Prev</button>
+                    <span id="attendancePage"></span>
+                    <button onclick="nextAttendancePage()">Next</button>
+                </div>
+
+                <button onclick="closeAttendance()" class="danger-btn">Close</button>
+            </div>
+        </div>
+
         <script>
             let allUsers = []
             let filteredUsers = []
             let page = 0
             const pageSize = 10
+            
+            let eventList = []
+            let eventPage = 0
+            const eventPageSize = 5
+
+            let attendanceList = []
+            let attendancePage = 0
+            const attendancePageSize = 5
+
+            async function viewCalendar(email, classGroup) {
+                const res = await fetch("/api/events/")
+                const events = await res.json()
+
+                eventList = events.filter(e => e.classGroup === classGroup)
+                eventPage = 0
+                renderEvents()
+                document.getElementById("calendarModal").style.display = "flex"
+            }
+
+            function closeCalendar() {
+                document.getElementById("calendarModal").style.display = "none"
+            }
+
+            function renderEvents() {
+                const list = document.getElementById("adminEventList")
+                list.innerHTML = ""
+
+                if (eventList.length === 0) {
+                    list.innerHTML = "<p>No events found for this class.</p>"
+                    return
+                }
+
+                const start = eventPage * eventPageSize
+                const pageData = eventList.slice(start, start + eventPageSize)
+
+                pageData.forEach(e => {
+                    const card = document.createElement("div")
+                    card.className = "admin-attendance-card"
+                    card.innerHTML = `
+                        <h4>${e.name}</h4>
+                        <p>Location: ${e.location}</p>
+                        <p>Start: ${new Date(e.startTime).toLocaleString()}</p>
+                        <p>End: ${new Date(e.endTime).toLocaleString()}</p>
+                    `
+                    list.appendChild(card)
+                })
+
+                const totalPages = Math.ceil(eventList.length / eventPageSize)
+                document.getElementById("eventPage").innerText =
+                    `Page ${eventPage+1} / ${Math.max(totalPages,1)}`
+            }
+
+            function nextEventPage() {
+                const maxPage = Math.ceil(eventList.length / eventPageSize) - 1
+
+                if (eventPage < maxPage) {
+                    eventPage++
+                    renderEvents()
+                }
+            }
+
+            function prevEventPage() {
+                if (eventPage > 0) {
+                    eventPage--
+                    renderEvents()
+                }
+            }
 
             async function loadUsers() {
                 const res = await fetch("/api/users/")
@@ -148,18 +250,37 @@
                 const data = filteredUsers.slice(start, start+pageSize)
 
                 data.forEach((u) => {
-                    const row = document.createElement("tr")
-                    row.innerHTML = `
-                        <td>${u.name}</td>
-                        <td>${u.email}</td>
-                        <td>${u.role}</td>
+                    if (u.role === "student") {
+                        const row = document.createElement("tr")
+                        row.innerHTML = `
+                            <td>${u.name}</td>
+                            <td>${u.email}</td>
+                            <td>${u.role}</td>
 
-                        <td>
-                            <button onclick="openModal('${u.id}')">Modify</button>
-                            <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
-                        </td>
-                    `
-                    body.appendChild(row)
+                            <td>
+                                <button onclick="openModal('${u.id}')">Modify</button>
+                                <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
+                                <button onclick="viewCalendar('${u.email}','${u.classGroup}')">Calendar</button>
+                                <button onclick="viewAttendance('${u.email}','${u.classGroup}')">Attendance</button>
+                            </td>
+                        `
+
+                        body.appendChild(row)
+                    } else {
+                        const row = document.createElement("tr")
+                        row.innerHTML = `
+                            <td>${u.name}</td>
+                            <td>${u.email}</td>
+                            <td>${u.role}</td>
+
+                            <td>
+                                <button onclick="openModal('${u.id}')">Modify</button>
+                                <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
+                            </td>
+                        `
+
+                        body.appendChild(row)
+                    }
                 })
 
                 const totalPages = Math.ceil(filteredUsers.length / pageSize)
@@ -180,6 +301,89 @@
                 if (page > 0) {
                     page--
                     render()
+                }
+            }
+
+            async function viewAttendance(email, classGroup) {
+                const res = await fetch("/api/events/")
+                const events = await res.json()
+                const filtered = events.filter(e => e.classGroup === classGroup)
+                const now = new Date()
+
+                attendanceList = []
+                let attended = 0
+
+                filtered.forEach(e => {
+                    const end = new Date(e.endTime)
+                    if (now > end) {
+                        const didAttend = e.attendees.includes(email)
+                        if (didAttend) attended++
+
+                        attendanceList.push({
+                            name: e.name,
+                            start: e.startTime,
+                            attended: didAttend
+                        })
+                    }
+                })
+
+                attendancePage = 0
+                renderAttendance()
+
+                const missed = attendanceList.length - attended
+                const percent = attendanceList.length === 0 ? 0 :
+                    Math.round((attended / attendanceList.length) * 100)
+
+                document.getElementById("adminAttendancePercent").innerText = percent + "%"
+                document.getElementById("adminAttended").innerText = attended
+                document.getElementById("adminMissed").innerText = missed
+                document.getElementById("attendanceModal").style.display = "flex"
+            }
+
+            function renderAttendance() {
+                const list = document.getElementById("adminAttendanceList")
+                list.innerHTML = ""
+
+                if (attendanceList.length === 0) {
+                    list.innerHTML = "<p>No attendance data available.</p>"
+                    return
+                }
+
+                const start = attendancePage * attendancePageSize
+                const data = attendanceList.slice(start, start + attendancePageSize)
+
+                data.forEach(e => {
+                    const card = document.createElement("div")
+                    card.className = "admin-attendance-card"
+                    card.innerHTML = `
+                        <h4>${e.name}</h4>
+                        <p>${new Date(e.start).toLocaleString()}</p>
+                        <p class="${e.attended ? "attended" : "missed"}">
+                            ${e.attended ? "Attended" : "Missed"}
+                        </p>
+                    `
+
+                    list.appendChild(card)
+                })
+            }
+
+            function closeAttendance() {
+                document.getElementById("attendanceModal").style.display = "none"
+            }
+
+            function nextAttendancePage() {
+                const maxPage = Math.ceil(attendanceList.length / attendancePageSize) - 1
+
+                if (attendancePage < maxPage) {
+                    attendancePage++
+                    renderAttendance()
+                }
+            }
+
+            function prevAttendancePage() {
+                if (attendancePage > 0) {
+                    attendancePage--
+                    renderAttendance()
                 }
             }
 
