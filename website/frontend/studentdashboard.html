@@ -9,16 +9,58 @@
 
   <body>
     <div class="dashboard">
-      <h1>My Calendar</h1>
-      <div id="calendar"></div>
-    </div>
+        <h1 id="title">My Dashboard</h1>
 
-    <div id="modal-qr" class="modal">
-        <div class="modal-content">
-            <h2>QR Code</h2>
-            <img id="qrImage" src=""/><br>
+        <div id="calendarDiv" class="calendar-page" style="display: none;">
+            <div class="top-bar">
+                <button onclick="openDashboard()" class="primary-btn">Dashboard</button>
+            </div>
+            
+            <div class="calendar-wrapper">
+                <div id="calendar"></div>
+            </div>
+        </div>
 
-            <button onclick="closeQrModal()" class="danger-btn">Close</button>
+        <div id="main" class="dashboard-home">
+            <div class="dashboard-buttons">
+                <button onclick="openCalendar()" class="primary-btn">Calendar</button>
+                <button onclick="openAttendance()" class="primary-btn">Attendance</button>
+            </div>
+
+            <div class="dashboard-cards">
+                <div class="info-card">
+                    <h3>Student Information</h3>
+                    <p><strong>Email:</strong> <span id="studentEmail"></span></p>
+                    <p><strong>Class Group:</strong> <span id="studentClass"></span></p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Attendance Overview</h3>
+                    <p>Attendance: <span id="dashboardAttendance">0%</span></p>
+                    <p>Events Attended: <span id="dashboardAttended">0</span></p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Upcoming Events</h3>
+                    <div id="upcomingEvents"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="attendance" class="attendance-page" style="display:none;">
+            <div class="top-bar">
+                <button onclick="openDashboard()" class="primary-btn">Dashboard</button>
+            </div>
+
+            <div class="attendance-summary">
+                <h3 id="attendancePercentage">Attendance Percentage: 0%</h3>
+                <p>Counted Events: <span id="countedEvents">0</span></p>
+                <p>Attended: <span id="attendedEvents">0</span></p>
+                <p>Missed: <span id="missedEvents">0</span></p>
+            </div>
+
+            <h3>Attendance Breakdown</h3>
+            <div id="attendanceList"></div>
         </div>
     </div>
 
@@ -31,7 +73,7 @@
             <p><strong>End:</strong> <span id="eventEnd"></span></p>
 
             <div class="modal-actions">
-                <button id="qrBtn" class="secondary-btn">Generate QR</button>
+                <button id="qrBtn" class="primary-btn"></button>
                 <button onclick="closeEventModal()" class="secondary-btn">Close</button>
             </div>
         </div>
@@ -46,6 +88,8 @@
 
         let calendar
         let selectedEventId = null
+        let email
+        let classgroup
 
         function openEventModal(event) {
             selectedEventId = event.id
@@ -56,7 +100,19 @@
             document.getElementById("eventStart").innerText = new Date(event.start).toLocaleString()
             document.getElementById("eventEnd").innerText = new Date(event.end).toLocaleString()
 
-            document.getElementById("qrBtn").onclick = () => qr(selectedEventId)
+            console.log(event.extendedProps.attendees.includes(email))
+
+            if ((new Date() > new Date(event.end))) {
+                document.getElementById("qrBtn").innerText = "Attendance Closed"
+                document.getElementById("qrBtn").className = "secondary-btn"
+            } else if (event.extendedProps.attendees.includes(email)) {
+                document.getElementById("qrBtn").innerText = "Checked In"
+                document.getElementById("qrBtn").className = "secondary-btn"
+            } else {
+                document.getElementById("qrBtn").innerText = "Check In"
+                document.getElementById("qrBtn").className = "primary-btn"
+                document.getElementById("qrBtn").onclick = () => checkIn(selectedEventId)
+            }
 
             document.getElementById("eventModal").style.display = "flex"
         }
@@ -65,13 +121,16 @@
             document.getElementById("eventModal").style.display = "none"
         }
 
+        async function loadPage() {
+            const loggedIn = await fetch("/api/auth/getloggedin")
+            const data = await loggedIn.json()
+            email = data.email
+            classgroup = data.classgroup
+        }
+
         async function loadEvents() {
             const res = await fetch("/api/events/")
             const events = await res.json()
-            const loggedIn = await fetch("/api/auth/getloggedin")
-            const data = await loggedIn.json()
-            const email = data.email
-            const classgroup = data.classgroup
 
             const filteredEvents = events.filter(f => f.classGroup === classgroup)
 
@@ -82,7 +141,8 @@
                 end: e.endTime,
                 extendedProps: {
                     location: e.location,
-                    classGroup: e.classGroup
+                    classGroup: e.classGroup,
+                    attendees: e.attendees
                 }
             }))
 
@@ -99,30 +159,146 @@
                     openEventModal(info.event)
                 },
             })
-
-            calendar.render()
         }
 
-        async function qr(id) {
-            const res = await fetch("/api/events/" + id + "/qr", {
-                method: "POST"
+        async function loadAttendance() {
+            const res = await fetch("/api/events/")
+            const events = await res.json()
+
+            const filtered = events.filter(e => e.classGroup === classgroup)
+            const now = new Date()
+            let counted = 0
+            let attended = 0
+
+            console.log(filtered)
+
+            const container = document.getElementById("attendanceList")
+            container.innerHTML = ""
+
+            filtered.forEach(e => {
+                const end = new Date(e.endTime)
+                if (now > end) {
+                    counted++
+                    const attendedEvent = e.attendees.includes(email)
+                    if (attendedEvent) attended++
+                    const status = attendedEvent ? "Attended" : "Missed"
+                    const card = document.createElement("div")
+                    card.className = "attendance-card"
+                    card.innerHTML = `
+                        <h4>${e.name}</h4>
+                        <p>Location: ${e.location}</p>
+                        <p>Start: ${new Date(e.startTime).toLocaleString()}</p>
+                        <p>End: ${new Date(e.endTime).toLocaleString()}</p>
+                        <p>Status: <b class="${status === "Attended" ? "attended" : "missed"}">${status}</b></p>
+                    `
+                    container.appendChild(card)
+                }
+            })
+
+            const missed = counted - attended
+            const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
+
+            document.getElementById("attendancePercentage").innerText =
+                `Attendance Percentage: ${percent}%`
+            document.getElementById("countedEvents").innerText = counted
+            document.getElementById("attendedEvents").innerText = attended
+            document.getElementById("missedEvents").innerText = missed
+        }
+
+        async function loadDashboard() {
+            const res = await fetch("/api/events/")
+            const events = await res.json()
+
+            document.getElementById("studentEmail").innerText = email
+            document.getElementById("studentClass").innerText = classgroup
+
+            const filtered = events.filter(e => e.classGroup === classgroup)
+            const now = new Date()
+            let counted = 0
+            let attended = 0
+
+            const upcomingContainer = document.getElementById("upcomingEvents")
+            upcomingContainer.innerHTML = ""
+
+            filtered.forEach(e => {
+                const start = new Date(e.startTime)
+                const end = new Date(e.endTime)
+
+                if (now > end) {
+                    counted++
+                    if (e.attendees.includes(email)) {
+                        attended++
+                    }
+                }
+
+                if (start > now) {
+                    const item = document.createElement("p")
+                    item.innerText =
+                        `${e.name} • ${start.toLocaleDateString()} ${start.toLocaleTimeString()}`
+
+                    upcomingContainer.appendChild(item)
+                }
+            })
+
+            const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
+
+            document.getElementById("dashboardAttendance").innerText = percent + "%"
+            document.getElementById("dashboardAttended").innerText = attended
+        }
+
+        async function checkIn(id) {
+            if (document.getElementById("qrBtn").innerText !== "Check In") return
+
+            const eventData = await fetch("/api/events/" + id, {
+                method: "GET"
+            })
+            const code = await (await eventData.json()).qrCode
+
+            console.log(code, email)
+
+            const res = await fetch("/api/events/checkin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code, email })
             })
 
             const data = await res.json()
-            const qrImage = document.getElementById("qrImage")
+            console.log(data)
 
-            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${data.code}`
-
-            document.getElementById("eventModal").style.display = "none"
-            document.getElementById("modal-qr").style.display = "flex"
+            if (data.success == true) {
+                document.getElementById("qrBtn").innerText = "Checked In"
+                document.getElementById("qrBtn").className = "secondary-btn"
+            }
         }
 
-        function closeQrModal() {
-            document.getElementById("modal-qr").style.display = "none"
-            document.getElementById("eventModal").style.display = "flex"
+        function openCalendar() {
+            document.getElementById("main").style.display = "none"
+            document.getElementById("calendarDiv").style.display = "flex"
+            document.getElementById("title").innerText = "My Calendar"
+
+            loadEvents()
+            calendar.refetchEvents()
+            calendar.render()
         }
 
+        function openAttendance() {
+            document.getElementById("main").style.display = "none"
+            document.getElementById("attendance").style.display = "flex"
+            document.getElementById("title").innerText = "My Attendance"
+
+            loadAttendance()
+        }
+
+        function openDashboard() {
+            document.getElementById("attendance").style.display = "none"
+            document.getElementById("calendarDiv").style.display = "none"
+            document.getElementById("main").style.display = "flex"
+            document.getElementById("title").innerText = "My Dashboard"
+        }
+
+        loadPage()
         loadEvents()
+        loadDashboard()
     </script>
   </body>
 </html>
