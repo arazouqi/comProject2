@@ -1,559 +1,559 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Admin Dashboard</title>
+<head>
+    <title>Admin — ClassIn</title>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-        <link rel="stylesheet" href="styles.css">
-    </head>
+<nav class="navbar">
+    <span class="navbar-brand">ClassIn</span>
+    <div class="navbar-right">
+        <span style="font-size:13px;color:var(--text-muted);font-weight:500;">Admin Panel</span>
+        <button onclick="logout()" class="danger-btn">Logout</button>
+    </div>
+</nav>
 
-    <body>
-        <div class="dashboard">
-            <div class="controls">
-                <h1>Admin Panel</h1>
-                <button onclick="logout()" class="danger-btn">Logout</button>
+<div class="page-wrapper">
+    <div class="page-header">
+        <h1>Users</h1>
+        <button class="primary-btn" onclick="openCreateModal()">+ Create User</button>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-bar">
+            <input id="search" placeholder="Search by name…">
+        </div>
+        <div id="notification"></div>
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users"></tbody>
+        </table>
+        <div class="pagination">
+            <button onclick="prevPage()">← Prev</button>
+            <span id="page"></span>
+            <button onclick="nextPage()">Next →</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h2>Edit User</h2>
+        <input id="id" type="hidden">
+
+        <div class="form-group">
+            <label>Username</label>
+            <input id="editUsername" placeholder="Username">
+        </div>
+        <div class="form-group">
+            <label>Full Name</label>
+            <input id="editName" placeholder="Full name">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input id="editEmail" type="email" placeholder="Email">
+        </div>
+        <div class="form-group">
+            <label>New Password <span style="font-weight:400;color:var(--text-muted)">(leave blank to keep current)</span></label>
+            <input id="editPassword" type="password" placeholder="New password">
+        </div>
+        <div class="form-group">
+            <label>Role</label>
+            <select id="editRole">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Class Group</label>
+            <select id="editClassGroup">
+                <option value="none">None</option>
+                <option value="computer-science-year-1">CS Year 1</option>
+                <option value="computer-science-year-2">CS Year 2</option>
+                <option value="computer-science-year-3">CS Year 3</option>
+                <option value="mathematics-year-1">Maths Year 1</option>
+                <option value="mathematics-year-2">Maths Year 2</option>
+                <option value="mathematics-year-3">Maths Year 3</option>
+                <option value="psychology-year-1">Psychology Year 1</option>
+                <option value="psychology-year-2">Psychology Year 2</option>
+                <option value="psychology-year-3">Psychology Year 3</option>
+                <option value="business-year-1">Business Year 1</option>
+                <option value="business-year-2">Business Year 2</option>
+                <option value="business-year-3">Business Year 3</option>
+                <option value="music-studies-year-1">Music Year 1</option>
+                <option value="music-studies-year-2">Music Year 2</option>
+                <option value="music-studies-year-3">Music Year 3</option>
+            </select>
+        </div>
+
+        <div id="editError" class="modal-error"></div>
+
+        <div class="modal-footer">
+            <button onclick="saveUser()" class="primary-btn">Save Changes</button>
+            <button onclick="closeModal()" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create User Modal -->
+<div id="modal-create" class="modal">
+    <div class="modal-content">
+        <h2>Create User</h2>
+
+        <div class="form-group">
+            <label>Username</label>
+            <input id="username" placeholder="Username">
+        </div>
+        <div class="form-group">
+            <label>Full Name</label>
+            <input id="name" placeholder="Full name">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input id="email" type="email" placeholder="Email">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input id="password" type="password" placeholder="Password">
+        </div>
+        <div class="form-group">
+            <label>Role</label>
+            <select id="role">
+                <option value="">Select role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Class Group</label>
+            <select id="classGroup">
+                <option value="none">None</option>
+                <option value="computer-science-year-1">CS Year 1</option>
+                <option value="computer-science-year-2">CS Year 2</option>
+                <option value="computer-science-year-3">CS Year 3</option>
+                <option value="mathematics-year-1">Maths Year 1</option>
+                <option value="mathematics-year-2">Maths Year 2</option>
+                <option value="mathematics-year-3">Maths Year 3</option>
+                <option value="psychology-year-1">Psychology Year 1</option>
+                <option value="psychology-year-2">Psychology Year 2</option>
+                <option value="psychology-year-3">Psychology Year 3</option>
+                <option value="business-year-1">Business Year 1</option>
+                <option value="business-year-2">Business Year 2</option>
+                <option value="business-year-3">Business Year 3</option>
+                <option value="music-studies-year-1">Music Year 1</option>
+                <option value="music-studies-year-2">Music Year 2</option>
+                <option value="music-studies-year-3">Music Year 3</option>
+            </select>
+        </div>
+
+        <div id="createError" class="modal-error"></div>
+
+        <div class="modal-footer">
+            <button onclick="createUser()" class="primary-btn">Create User</button>
+            <button onclick="closeCreateModal()" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Modal -->
+<div id="calendarModal" class="modal">
+    <div class="modal-content attendance-modal">
+        <h2>Class Events</h2>
+        <div id="adminEventList" class="attendance-list"></div>
+        <div class="pagination">
+            <button onclick="prevEventPage()">← Prev</button>
+            <span id="eventPage"></span>
+            <button onclick="nextEventPage()">Next →</button>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeCalendar()" class="secondary-btn">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Modal -->
+<div id="attendanceModal" class="modal">
+    <div class="modal-content attendance-modal">
+        <h2>Student Attendance</h2>
+
+        <div class="att-summary-row">
+            <div class="att-mini-stat">
+                <span>Rate</span>
+                <span id="adminAttendancePercent" style="color:var(--primary)"></span>
             </div>
-
-            <div class="controls">
-                <input id="search" placeholder="Search by name">
-                <p id="notification"></p>
-                <button class="primary-btn" onclick="openCreateModal()">Create User</button>
+            <div class="att-mini-stat">
+                <span>Attended</span>
+                <span id="adminAttended" class="green"></span>
             </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="users"></tbody>
-            </table>
-
-            <div class="pagination">
-                <button onclick="prevPage()">Prev</button>
-                <span id="page"></span>
-                <button onclick="nextPage()">Next</button>
+            <div class="att-mini-stat">
+                <span>Missed</span>
+                <span id="adminMissed" style="color:var(--danger)"></span>
             </div>
         </div>
 
-        <div id="modal" class="modal">
-            <div class="modal-content">
-                <h2>Edit User</h2>
+        <div id="adminAttendanceList" class="attendance-list"></div>
 
-                <input id="id" readonly><br>
-
-                <input id="editUsername" placeholder="Username"><br>
-                <input id="editName" placeholder="Name"><br>
-                <input id="editEmail" placeholder="Email"><br>
-                <input id="editPassword" type="password" placeholder="New Password (leave blank to keep current)"><br>
-
-                <select id="editRole">
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
-                </select><br>
-
-                <select id="editClassGroup">
-                    <option value="none">None</option>
-
-                    <option value="computer-science-year-1">CS Year 1</option>
-                    <option value="computer-science-year-2">CS Year 2</option>
-                    <option value="computer-science-year-3">CS Year 3</option>
-
-                    <option value="mathematics-year-1">Maths Year 1</option>
-                    <option value="mathematics-year-2">Maths Year 2</option>
-                    <option value="mathematics-year-3">Maths Year 3</option>
-
-                    <option value="psychology-year-1">Psychology Year 1</option>
-                    <option value="psychology-year-2">Psychology Year 2</option>
-                    <option value="psychology-year-3">Psychology Year 3</option>
-
-                    <option value="business-year-1">Business Year 1</option>
-                    <option value="business-year-2">Business Year 2</option>
-                    <option value="business-year-3">Business Year 3</option>
-
-                    <option value="music-studies-year-1">Music Year 1</option>
-                    <option value="music-studies-year-2">Music Year 2</option>
-                    <option value="music-studies-year-3">Music Year 3</option>
-                </select><br>
-
-                <p id="editError" style="color:red;"></p>
-
-                <button onclick="saveUser()" class="primary-btn">Save</button>
-                <button onclick="closeModal()" class="danger-btn">Close</button>
-            </div>
+        <div class="pagination">
+            <button onclick="prevAttendancePage()">← Prev</button>
+            <span id="attendancePage"></span>
+            <button onclick="nextAttendancePage()">Next →</button>
         </div>
-
-        <div id="modal-create" class="modal">
-            <div class="modal-content">
-                <h2>Create User</h2>
-
-                <input id="username" placeholder="Username" required><br>
-                <input id="name" placeholder="Name" required><br>
-                <input id="email" placeholder="Email" required><br>
-                <input id="password" type="password" placeholder="Password" required><br>
-
-                <select id="role" required>
-                    <option value="">Select role</option>
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
-                </select><br>
-
-                <select id="classGroup" required>
-                    <option value="none">None</option>
-
-                    <option value="computer-science-year-1">CS Year 1</option>
-                    <option value="computer-science-year-2">CS Year 2</option>
-                    <option value="computer-science-year-3">CS Year 3</option>
-
-                    <option value="mathematics-year-1">Maths Year 1</option>
-                    <option value="mathematics-year-2">Maths Year 2</option>
-                    <option value="mathematics-year-3">Maths Year 3</option>
-
-                    <option value="psychology-year-1">Psychology Year 1</option>
-                    <option value="psychology-year-2">Psychology Year 2</option>
-                    <option value="psychology-year-3">Psychology Year 3</option>
-
-                    <option value="business-year-1">Business Year 1</option>
-                    <option value="business-year-2">Business Year 2</option>
-                    <option value="business-year-3">Business Year 3</option>
-
-                    <option value="music-studies-year-1">Music Year 1</option>
-                    <option value="music-studies-year-2">Music Year 2</option>
-                    <option value="music-studies-year-3">Music Year 3</option>
-                </select><br><br>
-
-                <p id="createError" style="color:red;"></p>
-
-                <button onclick="createUser()" class="primary-btn">Create</button>
-                <button onclick="closeCreateModal()" class="danger-btn">Close</button>
-            </div>
+        <div class="modal-footer">
+            <button onclick="closeAttendance()" class="secondary-btn">Close</button>
         </div>
+    </div>
+</div>
 
-        <div id="calendarModal" class="modal">
-            <div class="modal-content attendance-modal">
-                <h2>User Events</h2>
-                <div id="adminEventList" class="attendance-list"></div>
-                <div class="pagination">
-                    <button onclick="prevEventPage()">Prev</button>
-                    <span id="eventPage"></span>
-                    <button onclick="nextEventPage()">Next</button>
-                </div>
-                <button onclick="closeCalendar()" class="danger-btn">Close</button>
-            </div>
-        </div>
+<script>
+    let allUsers = []
+    let filteredUsers = []
+    let page = 0
+    const pageSize = 10
 
-        <div id="attendanceModal" class="modal">
-            <div class="modal-content attendance-modal">
-                <h2>User Attendance</h2>
-                <div class="attendance-summary">
-                    <p><strong>Attendance:</strong> <span id="adminAttendancePercent"></span></p>
-                    <p>Attended: <span id="adminAttended"></span></p>
-                    <p>Missed: <span id="adminMissed"></span></p>
-                </div>
-                <div id="adminAttendanceList" class="attendance-list"></div>
+    let eventList = []
+    let eventPage = 0
+    const eventPageSize = 5
 
-                <div class="pagination">
-                    <button onclick="prevAttendancePage()">Prev</button>
-                    <span id="attendancePage"></span>
-                    <button onclick="nextAttendancePage()">Next</button>
-                </div>
+    let attendanceList = []
+    let attendancePage = 0
+    const attendancePageSize = 5
 
-                <button onclick="closeAttendance()" class="danger-btn">Close</button>
-            </div>
-        </div>
+    function badgeHtml(role) {
+        return `<span class="badge badge-${role}">${role}</span>`
+    }
 
-        <script>
-            let allUsers = []
-            let filteredUsers = []
-            let page = 0
-            const pageSize = 10
-            
-            let eventList = []
-            let eventPage = 0
-            const eventPageSize = 5
+    async function viewCalendar(email, classGroup) {
+        const res = await fetch("/api/events/")
+        const events = await res.json()
+        eventList = events.filter(e => e.classGroup === classGroup)
+        eventPage = 0
+        renderEvents()
+        document.getElementById("calendarModal").style.display = "flex"
+    }
 
-            let attendanceList = []
-            let attendancePage = 0
-            const attendancePageSize = 5
+    function closeCalendar() {
+        document.getElementById("calendarModal").style.display = "none"
+    }
 
-            async function viewCalendar(email, classGroup) {
-                const res = await fetch("/api/events/")
-                const events = await res.json()
+    function renderEvents() {
+        const list = document.getElementById("adminEventList")
+        list.innerHTML = ""
 
-                eventList = events.filter(e => e.classGroup === classGroup)
-                eventPage = 0
-                renderEvents()
-                document.getElementById("calendarModal").style.display = "flex"
+        if (eventList.length === 0) {
+            list.innerHTML = "<p style='color:var(--text-muted);font-size:14px;'>No events found for this class.</p>"
+            document.getElementById("eventPage").innerText = "Page 1 / 1"
+            return
+        }
+
+        const start = eventPage * eventPageSize
+        const pageData = eventList.slice(start, start + eventPageSize)
+
+        pageData.forEach(e => {
+            const card = document.createElement("div")
+            card.className = "admin-attendance-card"
+            const h4 = document.createElement("h4")
+            h4.textContent = e.name
+            const loc = document.createElement("p")
+            loc.textContent = "📍 " + e.location
+            const s = document.createElement("p")
+            s.textContent = "Start: " + new Date(e.startTime).toLocaleString()
+            const end = document.createElement("p")
+            end.textContent = "End: " + new Date(e.endTime).toLocaleString()
+            card.append(h4, loc, s, end)
+            list.appendChild(card)
+        })
+
+        const totalPages = Math.ceil(eventList.length / eventPageSize)
+        document.getElementById("eventPage").innerText = `Page ${eventPage + 1} / ${Math.max(totalPages, 1)}`
+    }
+
+    function nextEventPage() {
+        if (eventPage < Math.ceil(eventList.length / eventPageSize) - 1) {
+            eventPage++
+            renderEvents()
+        }
+    }
+
+    function prevEventPage() {
+        if (eventPage > 0) { eventPage--; renderEvents() }
+    }
+
+    async function loadUsers() {
+        const res = await fetch("/api/users/")
+        if (!res.ok) { window.location.href = "/signin.html"; return }
+        allUsers = await res.json()
+        filteredUsers = allUsers
+        page = 0
+        render()
+    }
+
+    function render() {
+        const body = document.getElementById("users")
+        body.innerHTML = ""
+
+        const start = page * pageSize
+        const data = filteredUsers.slice(start, start + pageSize)
+
+        data.forEach(u => {
+            const row = document.createElement("tr")
+
+            const nameTd = document.createElement("td")
+            nameTd.style.fontWeight = "500"
+            nameTd.textContent = u.name
+
+            const emailTd = document.createElement("td")
+            emailTd.style.color = "var(--text-muted)"
+            emailTd.style.fontSize = "13px"
+            emailTd.textContent = u.email
+
+            const roleTd = document.createElement("td")
+            roleTd.innerHTML = badgeHtml(u.role)
+
+            const actionTd = document.createElement("td")
+
+            const modifyBtn = document.createElement("button")
+            modifyBtn.textContent = "Edit"
+            modifyBtn.className = "btn-modify"
+            modifyBtn.onclick = () => openModal(u.id)
+
+            const deleteBtn = document.createElement("button")
+            deleteBtn.textContent = "Delete"
+            deleteBtn.className = "btn-delete"
+            deleteBtn.onclick = function () { confirmDelete(this, u.id) }
+
+            actionTd.append(modifyBtn, deleteBtn)
+
+            if (u.role === "student") {
+                const calBtn = document.createElement("button")
+                calBtn.textContent = "Calendar"
+                calBtn.className = "btn-view"
+                calBtn.onclick = () => viewCalendar(u.email, u.classGroup)
+
+                const attBtn = document.createElement("button")
+                attBtn.textContent = "Attendance"
+                attBtn.className = "btn-view"
+                attBtn.onclick = () => viewAttendance(u.email, u.classGroup)
+
+                actionTd.append(calBtn, attBtn)
             }
 
-            function closeCalendar() {
-                document.getElementById("calendarModal").style.display = "none"
+            row.append(nameTd, emailTd, roleTd, actionTd)
+            body.appendChild(row)
+        })
+
+        const totalPages = Math.ceil(filteredUsers.length / pageSize)
+        document.getElementById("page").innerText = `Page ${page + 1} / ${Math.max(totalPages, 1)}`
+    }
+
+    function nextPage() {
+        if (page < Math.ceil(filteredUsers.length / pageSize) - 1) { page++; render() }
+    }
+
+    function prevPage() {
+        if (page > 0) { page--; render() }
+    }
+
+    async function viewAttendance(email, classGroup) {
+        const res = await fetch("/api/events/")
+        const events = await res.json()
+        const filtered = events.filter(e => e.classGroup === classGroup)
+        const now = new Date()
+        attendanceList = []
+        let attended = 0
+
+        filtered.forEach(e => {
+            const end = new Date(e.endTime)
+            if (now > end) {
+                const didAttend = e.attendees.includes(email)
+                if (didAttend) attended++
+                attendanceList.push({ name: e.name, start: e.startTime, attended: didAttend })
             }
-
-            function renderEvents() {
-                const list = document.getElementById("adminEventList")
-                list.innerHTML = ""
-
-                if (eventList.length === 0) {
-                    list.innerHTML = "<p>No events found for this class.</p>"
-                    return
-                }
-
-                const start = eventPage * eventPageSize
-                const pageData = eventList.slice(start, start + eventPageSize)
-
-                pageData.forEach(e => {
-                    const card = document.createElement("div")
-                    card.className = "admin-attendance-card"
-                    card.textContent = ""
-                    const h4 = document.createElement("h4")
-                    h4.textContent = e.name
-                    const loc = document.createElement("p")
-                    loc.textContent = "Location: " + e.location
-                    const start2 = document.createElement("p")
-                    start2.textContent = "Start: " + new Date(e.startTime).toLocaleString()
-                    const end2 = document.createElement("p")
-                    end2.textContent = "End: " + new Date(e.endTime).toLocaleString()
-                    card.appendChild(h4)
-                    card.appendChild(loc)
-                    card.appendChild(start2)
-                    card.appendChild(end2)
-                    list.appendChild(card)
-                })
-
-                const totalPages = Math.ceil(eventList.length / eventPageSize)
-                document.getElementById("eventPage").innerText =
-                    `Page ${eventPage+1} / ${Math.max(totalPages,1)}`
-            }
-
-            function nextEventPage() {
-                const maxPage = Math.ceil(eventList.length / eventPageSize) - 1
-
-                if (eventPage < maxPage) {
-                    eventPage++
-                    renderEvents()
-                }
-            }
-
-            function prevEventPage() {
-                if (eventPage > 0) {
-                    eventPage--
-                    renderEvents()
-                }
-            }
-
-            async function loadUsers() {
-                const res = await fetch("/api/users/")
-                if (!res.ok) {
-                    window.location.href = "/signin.html"
-                    return
-                }
-                allUsers = await res.json()
-                filteredUsers = allUsers
-                page = 0
-
-                render()
-            }
-
-            function render() {
-                const body=document.getElementById("users")
-                body.innerHTML=""
-
-                const start = page * pageSize
-                const data = filteredUsers.slice(start, start+pageSize)
-
-                data.forEach((u) => {
-                    const row = document.createElement("tr")
-                    const nameTd = document.createElement("td")
-                    nameTd.textContent = u.name
-                    const emailTd = document.createElement("td")
-                    emailTd.textContent = u.email
-                    const roleTd = document.createElement("td")
-                    roleTd.textContent = u.role
-                    const actionTd = document.createElement("td")
-
-                    const modifyBtn = document.createElement("button")
-                    modifyBtn.textContent = "Modify"
-                    modifyBtn.onclick = () => openModal(u.id)
-
-                    const deleteBtn = document.createElement("button")
-                    deleteBtn.textContent = "Delete"
-                    deleteBtn.onclick = function() { confirmDelete(this, u.id) }
-
-                    actionTd.appendChild(modifyBtn)
-                    actionTd.appendChild(deleteBtn)
-
-                    if (u.role === "student") {
-                        const calBtn = document.createElement("button")
-                        calBtn.textContent = "Calendar"
-                        calBtn.onclick = () => viewCalendar(u.email, u.classGroup)
-
-                        const attBtn = document.createElement("button")
-                        attBtn.textContent = "Attendance"
-                        attBtn.onclick = () => viewAttendance(u.email, u.classGroup)
-
-                        actionTd.appendChild(calBtn)
-                        actionTd.appendChild(attBtn)
-                    }
-
-                    row.appendChild(nameTd)
-                    row.appendChild(emailTd)
-                    row.appendChild(roleTd)
-                    row.appendChild(actionTd)
-                    body.appendChild(row)
-                })
-
-                const totalPages = Math.ceil(filteredUsers.length / pageSize)
-                document.getElementById("page").innerText=`Page ${page+1} / ${Math.max(totalPages, 1)}`
-            }
-
-            function nextPage() {
-                const maxPage = Math.ceil(filteredUsers.length / pageSize) - 1
-
-                if (page < maxPage) {
-                    page++
-                    render()
-                }
-            }
-
-            function prevPage() {
-                if (page > 0) {
-                    page--
-                    render()
-                }
-            }
-
-            async function viewAttendance(email, classGroup) {
-                const res = await fetch("/api/events/")
-                const events = await res.json()
-                const filtered = events.filter(e => e.classGroup === classGroup)
-                const now = new Date()
-
-                attendanceList = []
-                let attended = 0
-
-                filtered.forEach(e => {
-                    const end = new Date(e.endTime)
-                    if (now > end) {
-                        const didAttend = e.attendees.includes(email)
-                        if (didAttend) attended++
-
-                        attendanceList.push({
-                            name: e.name,
-                            start: e.startTime,
-                            attended: didAttend
-                        })
-                    }
-                })
-
-                attendancePage = 0
-                renderAttendance()
-
-                const missed = attendanceList.length - attended
-                const percent = attendanceList.length === 0 ? 0 :
-                    Math.round((attended / attendanceList.length) * 100)
-
-                document.getElementById("adminAttendancePercent").innerText = percent + "%"
-                document.getElementById("adminAttended").innerText = attended
-                document.getElementById("adminMissed").innerText = missed
-                document.getElementById("attendanceModal").style.display = "flex"
-            }
-
-            function renderAttendance() {
-                const list = document.getElementById("adminAttendanceList")
-                list.innerHTML = ""
-
-                if (attendanceList.length === 0) {
-                    list.innerHTML = "<p>No attendance data available.</p>"
-                    return
-                }
-
-                const start = attendancePage * attendancePageSize
-                const data = attendanceList.slice(start, start + attendancePageSize)
-
-                data.forEach(e => {
-                    const card = document.createElement("div")
-                    card.className = "admin-attendance-card"
-                    const h4 = document.createElement("h4")
-                    h4.textContent = e.name
-                    const dateP = document.createElement("p")
-                    dateP.textContent = new Date(e.start).toLocaleString()
-                    const statusP = document.createElement("p")
-                    statusP.className = e.attended ? "attended" : "missed"
-                    statusP.textContent = e.attended ? "Attended" : "Missed"
-                    card.appendChild(h4)
-                    card.appendChild(dateP)
-                    card.appendChild(statusP)
-                    list.appendChild(card)
-                })
-            }
-
-            function closeAttendance() {
-                document.getElementById("attendanceModal").style.display = "none"
-            }
-
-            function nextAttendancePage() {
-                const maxPage = Math.ceil(attendanceList.length / attendancePageSize) - 1
-
-                if (attendancePage < maxPage) {
-                    attendancePage++
-                    renderAttendance()
-                }
-            }
-
-            function prevAttendancePage() {
-                if (attendancePage > 0) {
-                    attendancePage--
-                    renderAttendance()
-                }
-            }
-
-            document.getElementById("search").oninput = e => {
-                const q = e.target.value.toLowerCase()
-
-                filteredUsers = allUsers.filter(u =>
-                    u.name.toLowerCase().includes(q)
-                )
-
-                page = 0
-                render()
-            }
-
-            async function confirmDelete(btn, id) {
-                if (btn.innerText === "Confirm") {
-                    await fetch("/api/users/" + id, { 
-                        method: "DELETE"
-                    })
-
-                    loadUsers()
-                } else {
-                    btn.innerText = "Confirm"
-                }
-            }
-
-            async function openModal(id) {
-                const res = await fetch("/api/users/" + id)
-                const user = await res.json()
-
-                document.getElementById("id").value = id
-                document.getElementById("editUsername").value = user.username
-                document.getElementById("editName").value = user.name
-                document.getElementById("editEmail").value = user.email
-                document.getElementById("editPassword").value = ""
-                document.getElementById("editRole").value = user.role
-                document.getElementById("editClassGroup").value = user.classGroup
-                document.getElementById("editError").innerText = ""
-
-                document.getElementById("modal").style.display = "flex"
-            }
-
-            function openCreateModal() {
-                document.getElementById("username").value = ""
-                document.getElementById("name").value = ""
-                document.getElementById("email").value = ""
-                document.getElementById("password").value = ""
-                document.getElementById("role").value = ""
-                document.getElementById("classGroup").value = "none"
-                document.getElementById("createError").innerText = ""
-                document.getElementById("modal-create").style.display = "flex"
-            }
-
-            function closeModal() {
-                document.getElementById("modal").style.display = "none"
-            }
-
-            function closeCreateModal() {
-                document.getElementById("modal-create").style.display = "none"
-            }
-
-            async function saveUser() {
-                const id = document.getElementById("id").value
-                const username = document.getElementById("editUsername").value.trim()
-                const name = document.getElementById("editName").value.trim()
-                const email = document.getElementById("editEmail").value.trim()
-                const password = document.getElementById("editPassword").value
-                const role = document.getElementById("editRole").value
-                const classGroup = document.getElementById("editClassGroup").value
-
-                document.getElementById("editError").innerText = ""
-
-                const res = await fetch("/api/users/" + id, {
-                    method: "PUT",
-                    headers: { "Content-Type":"application/json" },
-                    body: JSON.stringify({
-                        username,
-                        name,
-                        email,
-                        password,
-                        role,
-                        classGroup
-                    })
-                })
-
-                const data = await res.json()
-
-                if (res.ok) {
-                    document.getElementById("notification").innerText = "User successfully updated"
-                    document.getElementById("modal").style.display="none"
-                    loadUsers()
-                } else {
-                    document.getElementById("editError").innerText = data.error || `Error ${res.status}`
-                }
-
-                await new Promise(r => setTimeout(r, 2000))
-                document.getElementById("notification").innerText = ""
-            }
-
-            async function createUser() {
-                const username = document.getElementById("username").value.trim()
-                const name = document.getElementById("name").value.trim()
-                const email = document.getElementById("email").value.trim()
-                const password = document.getElementById("password").value
-                const role = document.getElementById("role").value
-                const classGroup = document.getElementById("classGroup").value
-
-                document.getElementById("createError").innerText = ""
-
-                if (!username || !name || !email || !password || !role) {
-                    document.getElementById("createError").innerText = "All fields are required"
-                    return
-                }
-
-                const res = await fetch("/api/users/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        username,
-                        name,
-                        email,
-                        password,
-                        role,
-                        classGroup
-                    })
-                })
-
-                const data = await res.json()
-
-                if (!res.ok) {
-                    document.getElementById("createError").innerText = data.error || "Failed to create user"
-                    return
-                }
-
-                document.getElementById("modal-create").style.display = "none"
-                loadUsers()
-            }
-
-            async function logout() {
-                await fetch("/api/auth/logout", { method: "POST" })
-                window.location.href = "/signin.html"
-            }
-
+        })
+
+        attendancePage = 0
+        renderAttendance()
+
+        const missed = attendanceList.length - attended
+        const percent = attendanceList.length === 0 ? 0 : Math.round((attended / attendanceList.length) * 100)
+
+        document.getElementById("adminAttendancePercent").textContent = percent + "%"
+        document.getElementById("adminAttended").textContent = attended
+        document.getElementById("adminMissed").textContent = missed
+        document.getElementById("attendanceModal").style.display = "flex"
+    }
+
+    function renderAttendance() {
+        const list = document.getElementById("adminAttendanceList")
+        list.innerHTML = ""
+
+        if (attendanceList.length === 0) {
+            list.innerHTML = "<p style='color:var(--text-muted);font-size:14px;'>No attendance data available.</p>"
+            document.getElementById("attendancePage").innerText = "Page 1 / 1"
+            return
+        }
+
+        const start = attendancePage * attendancePageSize
+        const data = attendanceList.slice(start, start + attendancePageSize)
+
+        data.forEach(e => {
+            const card = document.createElement("div")
+            card.className = "admin-attendance-card"
+            const h4 = document.createElement("h4")
+            h4.textContent = e.name
+            const dateP = document.createElement("p")
+            dateP.textContent = new Date(e.start).toLocaleString()
+            const statusP = document.createElement("p")
+            statusP.className = e.attended ? "attended" : "missed"
+            statusP.textContent = e.attended ? "✓ Attended" : "✗ Missed"
+            card.append(h4, dateP, statusP)
+            list.appendChild(card)
+        })
+
+        const totalPages = Math.ceil(attendanceList.length / attendancePageSize)
+        document.getElementById("attendancePage").innerText = `Page ${attendancePage + 1} / ${Math.max(totalPages, 1)}`
+    }
+
+    function closeAttendance() {
+        document.getElementById("attendanceModal").style.display = "none"
+    }
+
+    function nextAttendancePage() {
+        if (attendancePage < Math.ceil(attendanceList.length / attendancePageSize) - 1) {
+            attendancePage++; renderAttendance()
+        }
+    }
+
+    function prevAttendancePage() {
+        if (attendancePage > 0) { attendancePage--; renderAttendance() }
+    }
+
+    document.getElementById("search").oninput = e => {
+        const q = e.target.value.toLowerCase()
+        filteredUsers = allUsers.filter(u => u.name.toLowerCase().includes(q))
+        page = 0
+        render()
+    }
+
+    async function confirmDelete(btn, id) {
+        if (btn.textContent === "Confirm?") {
+            await fetch("/api/users/" + id, { method: "DELETE" })
             loadUsers()
-        </script>
-    </body>
+        } else {
+            btn.textContent = "Confirm?"
+            btn.style.background = "#fee2e2"
+            btn.style.color = "var(--danger)"
+        }
+    }
+
+    async function openModal(id) {
+        const res = await fetch("/api/users/" + id)
+        const user = await res.json()
+        document.getElementById("id").value = id
+        document.getElementById("editUsername").value = user.username
+        document.getElementById("editName").value = user.name
+        document.getElementById("editEmail").value = user.email
+        document.getElementById("editPassword").value = ""
+        document.getElementById("editRole").value = user.role
+        document.getElementById("editClassGroup").value = user.classGroup
+        document.getElementById("editError").textContent = ""
+        document.getElementById("modal").style.display = "flex"
+    }
+
+    function openCreateModal() {
+        ["username","name","email","password"].forEach(id => document.getElementById(id).value = "")
+        document.getElementById("role").value = ""
+        document.getElementById("classGroup").value = "none"
+        document.getElementById("createError").textContent = ""
+        document.getElementById("modal-create").style.display = "flex"
+    }
+
+    function closeModal() { document.getElementById("modal").style.display = "none" }
+    function closeCreateModal() { document.getElementById("modal-create").style.display = "none" }
+
+    async function saveUser() {
+        const id = document.getElementById("id").value
+        const username = document.getElementById("editUsername").value.trim()
+        const name = document.getElementById("editName").value.trim()
+        const email = document.getElementById("editEmail").value.trim()
+        const password = document.getElementById("editPassword").value
+        const role = document.getElementById("editRole").value
+        const classGroup = document.getElementById("editClassGroup").value
+
+        document.getElementById("editError").textContent = ""
+
+        const res = await fetch("/api/users/" + id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, name, email, password, role, classGroup })
+        })
+
+        const data = await res.json()
+
+        if (res.ok) {
+            closeModal()
+            const n = document.getElementById("notification")
+            n.textContent = "✓ User updated successfully"
+            n.className = "notification"
+            loadUsers()
+            setTimeout(() => { n.textContent = "" }, 3000)
+        } else {
+            document.getElementById("editError").textContent = data.error || `Error ${res.status}`
+        }
+    }
+
+    async function createUser() {
+        const username = document.getElementById("username").value.trim()
+        const name = document.getElementById("name").value.trim()
+        const email = document.getElementById("email").value.trim()
+        const password = document.getElementById("password").value
+        const role = document.getElementById("role").value
+        const classGroup = document.getElementById("classGroup").value
+
+        document.getElementById("createError").textContent = ""
+
+        if (!username || !name || !email || !password || !role) {
+            document.getElementById("createError").textContent = "All fields are required"
+            return
+        }
+
+        const res = await fetch("/api/users/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, name, email, password, role, classGroup })
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+            document.getElementById("createError").textContent = data.error || "Failed to create user"
+            return
+        }
+
+        closeCreateModal()
+        loadUsers()
+    }
+
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" })
+        window.location.href = "/signin.html"
+    }
+
+    loadUsers()
+</script>
+</body>
 </html>

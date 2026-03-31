@@ -1,335 +1,352 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Student Dashboard</title>
-    
+<head>
+    <title>Student — ClassIn</title>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <link rel="stylesheet" href="styles.css">
-  </head>
+</head>
+<body>
 
-  <body>
-    <div class="dashboard">
-        <div class="controls">
-            <h1 id="title">My Dashboard</h1>
-            <button onclick="logout()" class="danger-btn">Logout</button>
-        </div>
+<nav class="navbar">
+    <span class="navbar-brand">ClassIn</span>
+    <div class="navbar-right" id="navRight">
+        <span style="font-size:13px;color:var(--text-muted);font-weight:500;">Student Portal</span>
+        <button onclick="logout()" class="danger-btn">Logout</button>
+    </div>
+</nav>
 
-        <div id="calendarDiv" class="calendar-page" style="display: none;">
-            <div class="top-bar">
-                <button onclick="openDashboard()" class="primary-btn">Dashboard</button>
-            </div>
-            
-            <div class="calendar-wrapper">
-                <div id="calendar"></div>
-            </div>
-        </div>
-
-        <div id="main" class="dashboard-home">
-            <div class="dashboard-buttons">
-                <button onclick="openCalendar()" class="primary-btn">Calendar</button>
-                <button onclick="openAttendance()" class="primary-btn">Attendance</button>
-            </div>
-
-            <div class="dashboard-cards">
-                <div class="info-card">
-                    <h3>Student Information</h3>
-                    <p><strong>Email:</strong> <span id="studentEmail"></span></p>
-                    <p><strong>Class Group:</strong> <span id="studentClass"></span></p>
-                </div>
-
-                <div class="info-card">
-                    <h3>Attendance Overview</h3>
-                    <p>Attendance: <span id="dashboardAttendance">0%</span></p>
-                    <p>Events Attended: <span id="dashboardAttended">0</span></p>
-                </div>
-
-                <div class="info-card">
-                    <h3>Upcoming Events</h3>
-                    <div id="upcomingEvents"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="attendance" class="attendance-page" style="display:none;">
-            <div class="top-bar">
-                <button onclick="openDashboard()" class="primary-btn">Dashboard</button>
-            </div>
-
-            <div class="attendance-summary">
-                <h3 id="attendancePercentage">Attendance Percentage: 0%</h3>
-                <p>Counted Events: <span id="countedEvents">0</span></p>
-                <p>Attended: <span id="attendedEvents">0</span></p>
-                <p>Missed: <span id="missedEvents">0</span></p>
-            </div>
-
-            <h3>Attendance Breakdown</h3>
-            <div id="attendanceList"></div>
+<!-- Main dashboard view -->
+<div id="main" class="page-wrapper">
+    <div class="page-header">
+        <h1>My Dashboard</h1>
+        <div style="display:flex;gap:10px;">
+            <button onclick="openCalendar()" class="primary-btn">Calendar</button>
+            <button onclick="openAttendance()" class="secondary-btn">Attendance</button>
         </div>
     </div>
 
-    <div id="eventModal" class="modal">
-        <div class="modal-content event-modal">
-            <h2 id="eventTitle"></h2>
-            <p><strong>Location:</strong> <span id="eventLocation"></span></p>
-            <p><strong>Class Group:</strong> <span id="eventClass"></span></p>
-            <p><strong>Start:</strong> <span id="eventStart"></span></p>
-            <p><strong>End:</strong> <span id="eventEnd"></span></p>
+    <div class="dashboard-cards">
+        <div class="info-card">
+            <h3>My Account</h3>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:4px;">Email</p>
+            <p id="studentEmail" style="font-weight:600;word-break:break-all;"></p>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:4px;margin-top:12px;">Class Group</p>
+            <p id="studentClass" style="font-weight:600;"></p>
+        </div>
 
-            <div class="modal-actions">
-                <button id="qrBtn" class="primary-btn"></button>
-                <button onclick="closeEventModal()" class="secondary-btn">Close</button>
-            </div>
-            <p id="checkinError" style="color:red; margin-top:8px;"></p>
+        <div class="info-card">
+            <h3>Attendance</h3>
+            <div class="stat-value" id="dashboardAttendance">—</div>
+            <p style="color:var(--text-muted);font-size:13px;margin-top:8px;">
+                <span id="dashboardAttended">0</span> events attended
+            </p>
+        </div>
+
+        <div class="info-card">
+            <h3>Upcoming Events</h3>
+            <div id="upcomingEvents" style="display:flex;flex-direction:column;gap:0;"></div>
+            <p id="noUpcoming" style="color:var(--text-muted);font-size:13px;display:none;">No upcoming events</p>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar view -->
+<div id="calendarDiv" style="display:none;" class="page-wrapper">
+    <div class="page-header">
+        <h1>My Calendar</h1>
+        <button onclick="openDashboard()" class="secondary-btn">← Back</button>
+    </div>
+    <div id="calendar"></div>
+</div>
+
+<!-- Attendance view -->
+<div id="attendanceDiv" style="display:none;" class="page-wrapper">
+    <div class="page-header">
+        <h1>My Attendance</h1>
+        <button onclick="openDashboard()" class="secondary-btn">← Back</button>
+    </div>
+
+    <div class="attendance-summary-card">
+        <div class="att-stat">
+            <span class="att-stat-label">Rate</span>
+            <span class="att-stat-value" id="attendancePercentage" style="color:var(--primary);">0%</span>
+        </div>
+        <div class="att-stat">
+            <span class="att-stat-label">Counted</span>
+            <span class="att-stat-value" id="countedEvents">0</span>
+        </div>
+        <div class="att-stat">
+            <span class="att-stat-label">Attended</span>
+            <span class="att-stat-value green" id="attendedEvents">0</span>
+        </div>
+        <div class="att-stat">
+            <span class="att-stat-label">Missed</span>
+            <span class="att-stat-value red" id="missedEvents">0</span>
         </div>
     </div>
 
-    <script>
-        let calendar
-        let calendarInitialized = false
-        let selectedEventId = null
-        let email
-        let classgroup
-        let allEvents = []
+    <p class="section-title">Breakdown</p>
+    <div id="attendanceList"></div>
+</div>
 
-        function openEventModal(event) {
-            selectedEventId = event.id
+<!-- Event Detail Modal -->
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <h2 id="eventTitle"></h2>
 
-            document.getElementById("eventTitle").textContent = event.title
-            document.getElementById("eventLocation").textContent = event.extendedProps.location
-            document.getElementById("eventClass").textContent = event.extendedProps.classGroup
-            document.getElementById("eventStart").textContent = new Date(event.start).toLocaleString()
-            document.getElementById("eventEnd").textContent = new Date(event.end).toLocaleString()
-            document.getElementById("checkinError").textContent = ""
+        <div class="event-detail">
+            <strong>Location</strong>
+            <span id="eventLocation"></span>
+        </div>
+        <div class="event-detail">
+            <strong>Class Group</strong>
+            <span id="eventClass"></span>
+        </div>
+        <div class="event-detail">
+            <strong>Start</strong>
+            <span id="eventStart"></span>
+        </div>
+        <div class="event-detail">
+            <strong>End</strong>
+            <span id="eventEnd"></span>
+        </div>
 
-            const qrBtn = document.getElementById("qrBtn")
+        <div class="modal-actions">
+            <button id="qrBtn" class="primary-btn"></button>
+            <button onclick="closeEventModal()" class="secondary-btn">Close</button>
+        </div>
+        <p id="checkinError" class="modal-error"></p>
+    </div>
+</div>
 
-            if ((new Date() > new Date(event.end))) {
-                qrBtn.textContent = "Attendance Closed"
-                qrBtn.className = "secondary-btn"
-                qrBtn.onclick = null
-            } else if (event.extendedProps.attendees.includes(email)) {
-                qrBtn.textContent = "Checked In"
-                qrBtn.className = "secondary-btn"
-                qrBtn.onclick = null
-            } else {
-                qrBtn.textContent = "Check In"
-                qrBtn.className = "primary-btn"
-                qrBtn.onclick = () => checkIn(selectedEventId)
+<script>
+    let calendar
+    let calendarInitialized = false
+    let selectedEventId = null
+    let email
+    let classgroup
+
+    function openEventModal(event) {
+        selectedEventId = event.id
+
+        document.getElementById("eventTitle").textContent = event.title
+        document.getElementById("eventLocation").textContent = event.extendedProps.location
+        document.getElementById("eventClass").textContent = event.extendedProps.classGroup
+        document.getElementById("eventStart").textContent = new Date(event.start).toLocaleString()
+        document.getElementById("eventEnd").textContent = new Date(event.end).toLocaleString()
+        document.getElementById("checkinError").textContent = ""
+
+        const qrBtn = document.getElementById("qrBtn")
+
+        if (new Date() > new Date(event.end)) {
+            qrBtn.textContent = "Attendance Closed"
+            qrBtn.className = "secondary-btn"
+            qrBtn.onclick = null
+        } else if (event.extendedProps.attendees.includes(email)) {
+            qrBtn.textContent = "✓ Checked In"
+            qrBtn.className = "secondary-btn"
+            qrBtn.onclick = null
+        } else {
+            qrBtn.textContent = "Check In"
+            qrBtn.className = "primary-btn"
+            qrBtn.onclick = () => checkIn(selectedEventId)
+        }
+
+        document.getElementById("eventModal").style.display = "flex"
+    }
+
+    function closeEventModal() {
+        document.getElementById("eventModal").style.display = "none"
+    }
+
+    async function loadPage() {
+        const loggedIn = await fetch("/api/auth/getloggedin")
+        if (!loggedIn.ok) { window.location.href = "/signin.html"; return }
+        const data = await loggedIn.json()
+        email = data.email
+        classgroup = data.classgroup
+
+        await Promise.all([loadDashboard(), loadEvents()])
+    }
+
+    async function loadEvents() {
+        const res = await fetch("/api/events/")
+        const allEvents = await res.json()
+        const filteredEvents = allEvents.filter(f => f.classGroup === classgroup)
+
+        const formattedEvents = filteredEvents.map(e => ({
+            id: e.id,
+            title: e.name,
+            start: e.startTime,
+            end: e.endTime,
+            extendedProps: {
+                location: e.location,
+                classGroup: e.classGroup,
+                attendees: e.attendees
+            }
+        }))
+
+        const calendarEl = document.getElementById("calendar")
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: "dayGridMonth",
+            headerToolbar: {
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay"
+            },
+            events: formattedEvents,
+            eventClick: function (info) { openEventModal(info.event) }
+        })
+
+        calendarInitialized = true
+    }
+
+    async function loadAttendance() {
+        const res = await fetch("/api/events/")
+        const events = await res.json()
+        const filtered = events.filter(e => e.classGroup === classgroup)
+        const now = new Date()
+        let counted = 0, attended = 0
+
+        const container = document.getElementById("attendanceList")
+        container.innerHTML = ""
+
+        filtered.forEach(e => {
+            const end = new Date(e.endTime)
+            if (now > end) {
+                counted++
+                const attendedEvent = e.attendees.includes(email)
+                if (attendedEvent) attended++
+
+                const card = document.createElement("div")
+                card.className = "attendance-card"
+
+                const h4 = document.createElement("h4")
+                h4.textContent = e.name
+
+                const locP = document.createElement("p")
+                locP.textContent = "📍 " + e.location
+
+                const startP = document.createElement("p")
+                startP.textContent = "Start: " + new Date(e.startTime).toLocaleString()
+
+                const statusP = document.createElement("p")
+                const statusB = document.createElement("b")
+                statusB.className = attendedEvent ? "attended" : "missed"
+                statusB.textContent = attendedEvent ? "✓ Attended" : "✗ Missed"
+                statusP.appendChild(statusB)
+
+                card.append(h4, locP, startP, statusP)
+                container.appendChild(card)
+            }
+        })
+
+        const missed = counted - attended
+        const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
+
+        document.getElementById("attendancePercentage").textContent = percent + "%"
+        document.getElementById("countedEvents").textContent = counted
+        document.getElementById("attendedEvents").textContent = attended
+        document.getElementById("missedEvents").textContent = missed
+    }
+
+    async function loadDashboard() {
+        const res = await fetch("/api/events/")
+        const events = await res.json()
+
+        document.getElementById("studentEmail").textContent = email
+        document.getElementById("studentClass").textContent = classgroup
+
+        const filtered = events.filter(e => e.classGroup === classgroup)
+        const now = new Date()
+        let counted = 0, attended = 0
+        const upcomingContainer = document.getElementById("upcomingEvents")
+        upcomingContainer.innerHTML = ""
+        let hasUpcoming = false
+
+        filtered.forEach(e => {
+            const start = new Date(e.startTime)
+            const end = new Date(e.endTime)
+
+            if (now > end) {
+                counted++
+                if (e.attendees.includes(email)) attended++
             }
 
-            document.getElementById("eventModal").style.display = "flex"
-        }
-
-        function closeEventModal() {
-            document.getElementById("eventModal").style.display = "none"
-        }
-
-        async function loadPage() {
-            const loggedIn = await fetch("/api/auth/getloggedin")
-            if (!loggedIn.ok) {
-                window.location.href = "/signin.html"
-                return
+            if (start > now) {
+                hasUpcoming = true
+                const item = document.createElement("p")
+                item.className = "upcoming-item"
+                item.textContent = `${e.name} • ${start.toLocaleDateString()}`
+                upcomingContainer.appendChild(item)
             }
-            const data = await loggedIn.json()
-            email = data.email
-            classgroup = data.classgroup
+        })
 
-            await Promise.all([loadEvents(), loadDashboard()])
+        document.getElementById("noUpcoming").style.display = hasUpcoming ? "none" : "block"
+
+        const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
+        document.getElementById("dashboardAttendance").textContent = percent + "%"
+        document.getElementById("dashboardAttended").textContent = attended
+    }
+
+    async function checkIn(id) {
+        const qrBtn = document.getElementById("qrBtn")
+        if (qrBtn.textContent !== "Check In") return
+
+        document.getElementById("checkinError").textContent = ""
+
+        const eventData = await fetch("/api/events/" + id)
+        const eventJson = await eventData.json()
+        const code = eventJson.qrCode
+
+        if (!code) {
+            document.getElementById("checkinError").textContent = "No QR code has been generated for this event yet"
+            return
         }
 
-        async function loadEvents() {
-            const res = await fetch("/api/events/")
-            allEvents = await res.json()
+        const res = await fetch("/api/events/checkin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, email })
+        })
 
-            const filteredEvents = allEvents.filter(f => f.classGroup === classgroup)
+        const data = await res.json()
 
-            const formattedEvents = filteredEvents.map(e => ({
-                id: e.id,
-                title: e.name,
-                start: e.startTime,
-                end: e.endTime,
-                extendedProps: {
-                    location: e.location,
-                    classGroup: e.classGroup,
-                    attendees: e.attendees
-                }
-            }))
-
-            const calendarEl = document.getElementById("calendar")
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: "dayGridMonth",
-                headerToolbar: {
-                    left: "prev,next today",
-                    center: "title",
-                    right: "dayGridMonth,timeGridWeek,timeGridDay"
-                },
-                events: formattedEvents,
-                eventClick: function(info) {
-                    openEventModal(info.event)
-                },
-            })
-
-            calendarInitialized = true
+        if (data.success) {
+            qrBtn.textContent = "✓ Checked In"
+            qrBtn.className = "secondary-btn"
+            qrBtn.onclick = null
+        } else {
+            document.getElementById("checkinError").textContent = data.error || "Check-in failed"
         }
+    }
 
-        async function loadAttendance() {
-            const res = await fetch("/api/events/")
-            const events = await res.json()
+    function openCalendar() {
+        document.getElementById("main").style.display = "none"
+        document.getElementById("calendarDiv").style.display = "block"
+        document.getElementById("attendanceDiv").style.display = "none"
+        if (calendarInitialized) { calendar.render() }
+    }
 
-            const filtered = events.filter(e => e.classGroup === classgroup)
-            const now = new Date()
-            let counted = 0
-            let attended = 0
+    function openAttendance() {
+        document.getElementById("main").style.display = "none"
+        document.getElementById("calendarDiv").style.display = "none"
+        document.getElementById("attendanceDiv").style.display = "block"
+        loadAttendance()
+    }
 
-            const container = document.getElementById("attendanceList")
-            container.innerHTML = ""
+    function openDashboard() {
+        document.getElementById("main").style.display = "block"
+        document.getElementById("calendarDiv").style.display = "none"
+        document.getElementById("attendanceDiv").style.display = "none"
+    }
 
-            filtered.forEach(e => {
-                const end = new Date(e.endTime)
-                if (now > end) {
-                    counted++
-                    const attendedEvent = e.attendees.includes(email)
-                    if (attendedEvent) attended++
-                    const status = attendedEvent ? "Attended" : "Missed"
-                    const card = document.createElement("div")
-                    card.className = "attendance-card"
-                    card.innerHTML = ""
-                    const h4 = document.createElement("h4")
-                    h4.textContent = e.name
-                    const locP = document.createElement("p")
-                    locP.textContent = "Location: " + e.location
-                    const startP = document.createElement("p")
-                    startP.textContent = "Start: " + new Date(e.startTime).toLocaleString()
-                    const endP = document.createElement("p")
-                    endP.textContent = "End: " + new Date(e.endTime).toLocaleString()
-                    const statusP = document.createElement("p")
-                    statusP.textContent = "Status: "
-                    const statusB = document.createElement("b")
-                    statusB.className = attendedEvent ? "attended" : "missed"
-                    statusB.textContent = status
-                    statusP.appendChild(statusB)
-                    card.appendChild(h4)
-                    card.appendChild(locP)
-                    card.appendChild(startP)
-                    card.appendChild(endP)
-                    card.appendChild(statusP)
-                    container.appendChild(card)
-                }
-            })
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" })
+        window.location.href = "/signin.html"
+    }
 
-            const missed = counted - attended
-            const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
-
-            document.getElementById("attendancePercentage").textContent =
-                `Attendance Percentage: ${percent}%`
-            document.getElementById("countedEvents").textContent = counted
-            document.getElementById("attendedEvents").textContent = attended
-            document.getElementById("missedEvents").textContent = missed
-        }
-
-        async function loadDashboard() {
-            const res = await fetch("/api/events/")
-            const events = await res.json()
-
-            document.getElementById("studentEmail").textContent = email
-            document.getElementById("studentClass").textContent = classgroup
-
-            const filtered = events.filter(e => e.classGroup === classgroup)
-            const now = new Date()
-            let counted = 0
-            let attended = 0
-
-            const upcomingContainer = document.getElementById("upcomingEvents")
-            upcomingContainer.innerHTML = ""
-
-            filtered.forEach(e => {
-                const start = new Date(e.startTime)
-                const end = new Date(e.endTime)
-
-                if (now > end) {
-                    counted++
-                    if (e.attendees.includes(email)) {
-                        attended++
-                    }
-                }
-
-                if (start > now) {
-                    const item = document.createElement("p")
-                    item.textContent =
-                        `${e.name} • ${start.toLocaleDateString()} ${start.toLocaleTimeString()}`
-                    upcomingContainer.appendChild(item)
-                }
-            })
-
-            const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
-
-            document.getElementById("dashboardAttendance").textContent = percent + "%"
-            document.getElementById("dashboardAttended").textContent = attended
-        }
-
-        async function checkIn(id) {
-            const qrBtn = document.getElementById("qrBtn")
-            if (qrBtn.textContent !== "Check In") return
-
-            document.getElementById("checkinError").textContent = ""
-
-            const eventData = await fetch("/api/events/" + id)
-            const eventJson = await eventData.json()
-            const code = eventJson.qrCode
-
-            if (!code) {
-                document.getElementById("checkinError").textContent = "No QR code generated for this event yet"
-                return
-            }
-
-            const res = await fetch("/api/events/checkin", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, email })
-            })
-
-            const data = await res.json()
-
-            if (data.success) {
-                qrBtn.textContent = "Checked In"
-                qrBtn.className = "secondary-btn"
-                qrBtn.onclick = null
-            } else {
-                document.getElementById("checkinError").textContent = data.error || "Check-in failed"
-            }
-        }
-
-        function openCalendar() {
-            document.getElementById("main").style.display = "none"
-            document.getElementById("calendarDiv").style.display = "flex"
-            document.getElementById("title").textContent = "My Calendar"
-
-            if (calendarInitialized) {
-                calendar.render()
-            }
-        }
-
-        function openAttendance() {
-            document.getElementById("main").style.display = "none"
-            document.getElementById("attendance").style.display = "flex"
-            document.getElementById("title").textContent = "My Attendance"
-
-            loadAttendance()
-        }
-
-        function openDashboard() {
-            document.getElementById("attendance").style.display = "none"
-            document.getElementById("calendarDiv").style.display = "none"
-            document.getElementById("main").style.display = "flex"
-            document.getElementById("title").textContent = "My Dashboard"
-        }
-
-        async function logout() {
-            await fetch("/api/auth/logout", { method: "POST" })
-            window.location.href = "/signin.html"
-        }
-
-        loadPage()
-    </script>
-  </body>
+    loadPage()
+</script>
+</body>
 </html>

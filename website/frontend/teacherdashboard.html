@@ -1,35 +1,54 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Teacher Dashboard</title>
-    
+<head>
+    <title>Teacher — ClassIn</title>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <link rel="stylesheet" href="styles.css">
-  </head>
+</head>
+<body>
 
-  <body>
-    <div class="dashboard">
-      <div class="controls">
+<nav class="navbar">
+    <span class="navbar-brand">ClassIn</span>
+    <div class="navbar-right">
+        <span style="font-size:13px;color:var(--text-muted);font-weight:500;">Teacher Portal</span>
+        <button onclick="logout()" class="danger-btn">Logout</button>
+    </div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="page-header">
         <h1>Events Calendar</h1>
-        <div>
-          <button onclick="openCreate()" class="primary-btn">Create Event</button>
-          <button onclick="logout()" class="danger-btn">Logout</button>
-        </div>
-      </div>
-      <p id="notification"></p>
-      <div id="calendar"></div>
+        <button onclick="openCreate()" class="primary-btn">+ Create Event</button>
     </div>
+    <p id="notification"></p>
+    <div id="calendar"></div>
+</div>
 
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h2>Edit Event</h2>
-            <input id="id" name="id" readonly><br>
-            <input id="editName" name="name" placeholder="Name" required><br>
-            <input id="editLocation" name="location" placeholder="Location" required><br>
-            <input id="edit-start-time" type="datetime-local" name="start-time" required><br>
-            <input id="edit-end-time" type="datetime-local" name="end-time" required><br>
+<!-- Edit Event Modal -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h2>Edit Event</h2>
+        <input id="id" type="hidden">
 
-            <select id="editClassgroup" name="classgroup" required>
+        <div class="form-group">
+            <label>Event Name</label>
+            <input id="editName" placeholder="Name">
+        </div>
+        <div class="form-group">
+            <label>Location</label>
+            <input id="editLocation" placeholder="Location">
+        </div>
+        <div class="form-group">
+            <label>Start Time</label>
+            <input id="edit-start-time" type="datetime-local">
+        </div>
+        <div class="form-group">
+            <label>End Time</label>
+            <input id="edit-end-time" type="datetime-local">
+        </div>
+        <div class="form-group">
+            <label>Class Group</label>
+            <select id="editClassgroup">
                 <option value="">Select Class Group</option>
                 <option value="computer-science-year-1">CS Year 1</option>
                 <option value="computer-science-year-2">CS Year 2</option>
@@ -46,24 +65,42 @@
                 <option value="music-studies-year-1">Music Year 1</option>
                 <option value="music-studies-year-2">Music Year 2</option>
                 <option value="music-studies-year-3">Music Year 3</option>
-            </select><br>
+            </select>
+        </div>
 
-            <p id="editError" style="color:red;"></p>
+        <div id="editError" class="modal-error"></div>
 
-            <button onclick="updateCalendarEvent()" class="primary-btn">Modify</button>
-            <button onclick="closeModify()" class="danger-btn">Close</button>
+        <div class="modal-footer">
+            <button onclick="updateCalendarEvent()" class="primary-btn">Save Changes</button>
+            <button onclick="closeModify()" class="secondary-btn">Cancel</button>
         </div>
     </div>
+</div>
 
-    <div id="modal-create" class="modal">
-        <div class="modal-content">
-            <h2>Create Event</h2>
-            <input id="name" name="name" placeholder="Name" required><br>
-            <input id="location" name="location" placeholder="Location" required><br>
-            <input id="start-time" type="datetime-local" name="start-time" placeholder="Start Time" required><br>
-            <input id="end-time" type="datetime-local" name="end-time" placeholder="End Time" required><br>
+<!-- Create Event Modal -->
+<div id="modal-create" class="modal">
+    <div class="modal-content">
+        <h2>Create Event</h2>
 
-            <select id="classgroup" name="classgroup" required>
+        <div class="form-group">
+            <label>Event Name</label>
+            <input id="name" placeholder="Name">
+        </div>
+        <div class="form-group">
+            <label>Location</label>
+            <input id="location" placeholder="Location">
+        </div>
+        <div class="form-group">
+            <label>Start Time</label>
+            <input id="start-time" type="datetime-local">
+        </div>
+        <div class="form-group">
+            <label>End Time</label>
+            <input id="end-time" type="datetime-local">
+        </div>
+        <div class="form-group">
+            <label>Class Group</label>
+            <select id="classgroup">
                 <option value="">Select Class Group</option>
                 <option value="computer-science-year-1">CS Year 1</option>
                 <option value="computer-science-year-2">CS Year 2</option>
@@ -80,255 +117,263 @@
                 <option value="music-studies-year-1">Music Year 1</option>
                 <option value="music-studies-year-2">Music Year 2</option>
                 <option value="music-studies-year-3">Music Year 3</option>
-            </select><br>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Teacher Name</label>
+            <input id="teacher" placeholder="Teacher name">
+        </div>
 
-            <input id="teacher" type="text" name="teacher" placeholder="Teacher" required><br>
+        <div id="createError" class="modal-error"></div>
 
-            <p id="createError" style="color:red;"></p>
-
-            <button onclick="createCalendarEvent()" class="primary-btn">Create</button>
-            <button onclick="closeCreate()" class="danger-btn">Close</button>
+        <div class="modal-footer">
+            <button onclick="createCalendarEvent()" class="primary-btn">Create Event</button>
+            <button onclick="closeCreate()" class="secondary-btn">Cancel</button>
         </div>
     </div>
+</div>
 
-    <div id="modal-qr" class="modal">
-        <div class="modal-content">
-            <h2>QR Code</h2>
-            <img id="qrImage" src=""/><br>
-
-            <button onclick="closeQrModal()" class="danger-btn">Close</button>
+<!-- QR Modal -->
+<div id="modal-qr" class="modal">
+    <div class="modal-content" style="text-align:center;">
+        <h2>Attendance QR Code</h2>
+        <div class="qr-wrapper">
+            <img id="qrImage" src="" alt="QR Code" style="width:180px;height:180px;">
+            <p style="font-size:13px;color:var(--text-muted);">Show this QR code to students to mark attendance.</p>
+        </div>
+        <div class="modal-footer" style="justify-content:center;">
+            <button onclick="closeQrModal()" class="secondary-btn">Close</button>
         </div>
     </div>
+</div>
 
-    <div id="eventModal" class="modal">
-        <div class="modal-content event-modal">
-            <h2 id="eventTitle"></h2>
-            <p><strong>Location:</strong> <span id="eventLocation"></span></p>
-            <p><strong>Class Group:</strong> <span id="eventClass"></span></p>
-            <p><strong>Start:</strong> <span id="eventStart"></span></p>
-            <p><strong>End:</strong> <span id="eventEnd"></span></p>
+<!-- Event Detail Modal -->
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <h2 id="eventTitle"></h2>
 
-            <div class="modal-actions">
-                <button id="modifyBtn" class="primary-btn">Modify</button>
-                <button id="deleteBtn" class="danger-btn">Delete</button>
-                <button id="qrBtn" class="secondary-btn">Generate QR</button>
-                <button onclick="closeEventModal()" class="secondary-btn">Close</button>
-            </div>
+        <div class="event-detail">
+            <strong>Location</strong>
+            <span id="eventLocation"></span>
+        </div>
+        <div class="event-detail">
+            <strong>Class Group</strong>
+            <span id="eventClass"></span>
+        </div>
+        <div class="event-detail">
+            <strong>Start</strong>
+            <span id="eventStart"></span>
+        </div>
+        <div class="event-detail">
+            <strong>End</strong>
+            <span id="eventEnd"></span>
+        </div>
+
+        <div class="modal-actions">
+            <button id="modifyBtn" class="primary-btn">Edit</button>
+            <button id="deleteBtn" class="danger-btn">Delete</button>
+            <button id="qrBtn" class="secondary-btn">Generate QR</button>
+            <button onclick="closeEventModal()" class="secondary-btn">Close</button>
         </div>
     </div>
+</div>
 
-    <script>
-        function toDatetimeLocal(date) {
-            const d = new Date(date)
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
-            return d.toISOString().slice(0,16)
-        }
+<script>
+    function toDatetimeLocal(date) {
+        const d = new Date(date)
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+        return d.toISOString().slice(0, 16)
+    }
 
-        let calendar
-        let selectedEventId = null
+    let calendar
+    let selectedEventId = null
 
-        function openEventModal(event) {
-            selectedEventId = event.id
+    function openEventModal(event) {
+        selectedEventId = event.id
 
-            document.getElementById("eventTitle").innerText = event.title
-            document.getElementById("eventLocation").innerText = event.extendedProps.location
-            document.getElementById("eventClass").innerText = event.extendedProps.classGroup
-            document.getElementById("eventStart").innerText = new Date(event.start).toLocaleString()
-            document.getElementById("eventEnd").innerText = new Date(event.end).toLocaleString()
+        document.getElementById("eventTitle").textContent = event.title
+        document.getElementById("eventLocation").textContent = event.extendedProps.location
+        document.getElementById("eventClass").textContent = event.extendedProps.classGroup
+        document.getElementById("eventStart").textContent = new Date(event.start).toLocaleString()
+        document.getElementById("eventEnd").textContent = new Date(event.end).toLocaleString()
 
-            const deleteBtn = document.getElementById("deleteBtn")
-            deleteBtn.innerText = "Delete"
+        const deleteBtn = document.getElementById("deleteBtn")
+        deleteBtn.textContent = "Delete"
 
-            document.getElementById("modifyBtn").onclick = () => openModify(selectedEventId)
-            deleteBtn.onclick = () => deleteEventConfirm()
-            document.getElementById("qrBtn").onclick = () => qr(selectedEventId)
+        document.getElementById("modifyBtn").onclick = () => openModify(selectedEventId)
+        deleteBtn.onclick = () => deleteEventConfirm()
+        document.getElementById("qrBtn").onclick = () => qr(selectedEventId)
 
-            document.getElementById("eventModal").style.display = "flex"
-        }
+        document.getElementById("eventModal").style.display = "flex"
+    }
 
-        function closeEventModal() {
-            document.getElementById("eventModal").style.display = "none"
-        }
+    function closeEventModal() {
+        document.getElementById("eventModal").style.display = "none"
+    }
 
-        async function loadEvents() {
-            const res = await fetch("/api/events/")
-            const events = await res.json()
+    async function loadEvents() {
+        const res = await fetch("/api/events/")
+        const events = await res.json()
 
-            const formattedEvents = events.map(e => ({
-                id: e.id,
-                title: e.name,
-                start: e.startTime,
-                end: e.endTime,
-                extendedProps: {
-                    location: e.location,
-                    classGroup: e.classGroup
-                }
-            }))
+        const formattedEvents = events.map(e => ({
+            id: e.id,
+            title: e.name,
+            start: e.startTime,
+            end: e.endTime,
+            extendedProps: { location: e.location, classGroup: e.classGroup }
+        }))
 
-            const calendarEl = document.getElementById("calendar")
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: "dayGridMonth",
-                headerToolbar: {
-                    left: "prev,next today",
-                    center: "title",
-                    right: "dayGridMonth,timeGridWeek,timeGridDay"
-                },
-                events: formattedEvents,
-                eventClick: function(info) {
-                    openEventModal(info.event)
-                },
-            })
+        const calendarEl = document.getElementById("calendar")
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: "dayGridMonth",
+            headerToolbar: {
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay"
+            },
+            events: formattedEvents,
+            eventClick: function (info) { openEventModal(info.event) }
+        })
 
-            calendar.render()
-        }
-        
-        async function deleteEventConfirm() {
-            const btn = document.getElementById("deleteBtn")
+        calendar.render()
+    }
 
-            if (btn.innerText === "Confirm") {
-                await fetch("/api/events/" + selectedEventId, {
-                    method: "DELETE"
-                })
+    async function deleteEventConfirm() {
+        const btn = document.getElementById("deleteBtn")
 
-                closeEventModal()
-                window.location.reload()
-            } else {
-                btn.innerText = "Confirm"
-            }
-        }
-
-        async function qr(id) {
-            const res = await fetch("/api/events/" + id + "/qr", {
-                method: "POST"
-            })
-
-            const data = await res.json()
-            const qrImage = document.getElementById("qrImage")
-
-            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${data.code}`
-
-            document.getElementById("eventModal").style.display = "none"
-            document.getElementById("modal-qr").style.display = "flex"
-        }
-
-        function closeQrModal() {
-            document.getElementById("modal-qr").style.display = "none"
-            document.getElementById("eventModal").style.display = "flex"
-        }
-
-        function openCreate() {
-            document.getElementById("createError").innerText = ""
-            document.getElementById("modal-create").style.display = "flex"
-        }
-
-        function closeCreate() {
-            document.getElementById("modal-create").style.display = "none"
-        }
-
-        async function openModify(id) {
-            const res = await fetch("/api/events/" + id, {
-                method: "GET"
-            })
-
-            const event = await res.json()
-
-            document.getElementById("id").value = id
-            document.getElementById("editName").value = event.name
-            document.getElementById("editLocation").value = event.location
-            document.getElementById("edit-start-time").value = toDatetimeLocal(event.startTime)
-            document.getElementById("edit-end-time").value = toDatetimeLocal(event.endTime)
-            document.getElementById("editClassgroup").value = event.classGroup
-            document.getElementById("editError").innerText = ""
-
-            document.getElementById("eventModal").style.display = "none"
-            document.getElementById("modal").style.display = "flex"
-        }
-
-        function closeModify() {
-            document.getElementById("modal").style.display = "none"
-            document.getElementById("eventModal").style.display = "flex"
-        }
-
-        async function createCalendarEvent() {
-            const name = document.getElementById("name").value.trim()
-            const location = document.getElementById("location").value.trim()
-            const startTime = document.getElementById("start-time").value
-            const endTime = document.getElementById("end-time").value
-            const classGroup = document.getElementById("classgroup").value
-            const teacher = document.getElementById("teacher").value.trim()
-
-            document.getElementById("createError").innerText = ""
-
-            if (!name || !location || !startTime || !endTime || !classGroup || !teacher) {
-                document.getElementById("createError").innerText = "All fields are required"
-                return
-            }
-
-            if (new Date(endTime) <= new Date(startTime)) {
-                document.getElementById("createError").innerText = "End time must be after start time"
-                return
-            }
-
-            const res = await fetch("/api/events/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, location, startTime, endTime, classGroup, teacher })
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                document.getElementById("createError").innerText = data.error || "Failed to create event"
-                return
-            }
-
-            document.getElementById("modal-create").style.display = "none"
+        if (btn.textContent === "Confirm?") {
+            await fetch("/api/events/" + selectedEventId, { method: "DELETE" })
+            closeEventModal()
             window.location.reload()
+        } else {
+            btn.textContent = "Confirm?"
+        }
+    }
+
+    async function qr(id) {
+        const res = await fetch("/api/events/" + id + "/qr", { method: "POST" })
+        const data = await res.json()
+        document.getElementById("qrImage").src =
+            `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${data.code}`
+        document.getElementById("eventModal").style.display = "none"
+        document.getElementById("modal-qr").style.display = "flex"
+    }
+
+    function closeQrModal() {
+        document.getElementById("modal-qr").style.display = "none"
+        document.getElementById("eventModal").style.display = "flex"
+    }
+
+    function openCreate() {
+        document.getElementById("createError").textContent = ""
+        document.getElementById("modal-create").style.display = "flex"
+    }
+
+    function closeCreate() {
+        document.getElementById("modal-create").style.display = "none"
+    }
+
+    async function openModify(id) {
+        const res = await fetch("/api/events/" + id)
+        const event = await res.json()
+
+        document.getElementById("id").value = id
+        document.getElementById("editName").value = event.name
+        document.getElementById("editLocation").value = event.location
+        document.getElementById("edit-start-time").value = toDatetimeLocal(event.startTime)
+        document.getElementById("edit-end-time").value = toDatetimeLocal(event.endTime)
+        document.getElementById("editClassgroup").value = event.classGroup
+        document.getElementById("editError").textContent = ""
+
+        document.getElementById("eventModal").style.display = "none"
+        document.getElementById("modal").style.display = "flex"
+    }
+
+    function closeModify() {
+        document.getElementById("modal").style.display = "none"
+        document.getElementById("eventModal").style.display = "flex"
+    }
+
+    async function createCalendarEvent() {
+        const name = document.getElementById("name").value.trim()
+        const location = document.getElementById("location").value.trim()
+        const startTime = document.getElementById("start-time").value
+        const endTime = document.getElementById("end-time").value
+        const classGroup = document.getElementById("classgroup").value
+        const teacher = document.getElementById("teacher").value.trim()
+
+        document.getElementById("createError").textContent = ""
+
+        if (!name || !location || !startTime || !endTime || !classGroup || !teacher) {
+            document.getElementById("createError").textContent = "All fields are required"
+            return
         }
 
-        async function updateCalendarEvent() {
-            const id = document.getElementById("id").value
-            const name = document.getElementById("editName").value.trim()
-            const location = document.getElementById("editLocation").value.trim()
-            const startTime = document.getElementById("edit-start-time").value
-            const endTime = document.getElementById("edit-end-time").value
-            const classGroup = document.getElementById("editClassgroup").value
-
-            document.getElementById("editError").innerText = ""
-
-            if (!name || !location || !startTime || !endTime || !classGroup) {
-                document.getElementById("editError").innerText = "All fields are required"
-                return
-            }
-
-            if (new Date(endTime) <= new Date(startTime)) {
-                document.getElementById("editError").innerText = "End time must be after start time"
-                return
-            }
-
-            const res = await fetch("/api/events/" + id, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, location, startTime, endTime, classGroup })
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                document.getElementById("editError").innerText = data.error || "Failed to update event"
-                return
-            }
-
-            document.getElementById("modal").style.display = "none"
-            window.location.reload()
+        if (new Date(endTime) <= new Date(startTime)) {
+            document.getElementById("createError").textContent = "End time must be after start time"
+            return
         }
 
-        async function logout() {
-            await fetch("/api/auth/logout", { method: "POST" })
-            window.location.href = "/signin.html"
+        const res = await fetch("/api/events/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, location, startTime, endTime, classGroup, teacher })
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+            document.getElementById("createError").textContent = data.error || "Failed to create event"
+            return
         }
 
-        loadEvents()
-    </script>
-  </body>
+        closeCreate()
+        window.location.reload()
+    }
+
+    async function updateCalendarEvent() {
+        const id = document.getElementById("id").value
+        const name = document.getElementById("editName").value.trim()
+        const location = document.getElementById("editLocation").value.trim()
+        const startTime = document.getElementById("edit-start-time").value
+        const endTime = document.getElementById("edit-end-time").value
+        const classGroup = document.getElementById("editClassgroup").value
+
+        document.getElementById("editError").textContent = ""
+
+        if (!name || !location || !startTime || !endTime || !classGroup) {
+            document.getElementById("editError").textContent = "All fields are required"
+            return
+        }
+
+        if (new Date(endTime) <= new Date(startTime)) {
+            document.getElementById("editError").textContent = "End time must be after start time"
+            return
+        }
+
+        const res = await fetch("/api/events/" + id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, location, startTime, endTime, classGroup })
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+            document.getElementById("editError").textContent = data.error || "Failed to update event"
+            return
+        }
+
+        closeModify()
+        window.location.reload()
+    }
+
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" })
+        window.location.href = "/signin.html"
+    }
+
+    loadEvents()
+</script>
+</body>
 </html>
