@@ -24,6 +24,11 @@ app.use(session({
     saveUninitialized: true
 }))
 
+// default page
+app.get("/", (req, res) => {
+    res.redirect("/signin.html")
+})
+
 // static redirects
 app.get("/admindashboard", (req, res) => {
     if (!req.session.user || req.session.role !== "admin") {
