@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Student — ClassIn</title>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script src="calendar.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -186,16 +186,9 @@
             }
         }))
 
-        const calendarEl = document.getElementById("calendar")
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: "dayGridMonth",
-            headerToolbar: {
-                left: "prev,next today",
-                center: "title",
-                right: "dayGridMonth,timeGridWeek,timeGridDay"
-            },
+        calendar = new ClassInCalendar("calendar", {
             events: formattedEvents,
-            eventClick: function (info) { openEventModal(info.event) }
+            onEventClick: (ev) => openEventModal(ev)
         })
 
         calendarInitialized = true
