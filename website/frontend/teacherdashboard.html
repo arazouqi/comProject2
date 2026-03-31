@@ -9,8 +9,14 @@
 
   <body>
     <div class="dashboard">
-      <h1>Events Calendar</h1>
-      <button onclick="openCreate()" class="primary-btn">Create Event</button>
+      <div class="controls">
+        <h1>Events Calendar</h1>
+        <div>
+          <button onclick="openCreate()" class="primary-btn">Create Event</button>
+          <button onclick="logout()" class="danger-btn">Logout</button>
+        </div>
+      </div>
+      <p id="notification"></p>
       <div id="calendar"></div>
     </div>
 
@@ -18,11 +24,31 @@
         <div class="modal-content">
             <h2>Edit Event</h2>
             <input id="id" name="id" readonly><br>
-            <input id="editName" name="name" required><br>
-            <input id="editLocation" name="location" required><br>
+            <input id="editName" name="name" placeholder="Name" required><br>
+            <input id="editLocation" name="location" placeholder="Location" required><br>
             <input id="edit-start-time" type="datetime-local" name="start-time" required><br>
             <input id="edit-end-time" type="datetime-local" name="end-time" required><br>
-            <input id="editClassgroup" type="string" name="classgroup" required><br>
+
+            <select id="editClassgroup" name="classgroup" required>
+                <option value="">Select Class Group</option>
+                <option value="computer-science-year-1">CS Year 1</option>
+                <option value="computer-science-year-2">CS Year 2</option>
+                <option value="computer-science-year-3">CS Year 3</option>
+                <option value="mathematics-year-1">Maths Year 1</option>
+                <option value="mathematics-year-2">Maths Year 2</option>
+                <option value="mathematics-year-3">Maths Year 3</option>
+                <option value="psychology-year-1">Psychology Year 1</option>
+                <option value="psychology-year-2">Psychology Year 2</option>
+                <option value="psychology-year-3">Psychology Year 3</option>
+                <option value="business-year-1">Business Year 1</option>
+                <option value="business-year-2">Business Year 2</option>
+                <option value="business-year-3">Business Year 3</option>
+                <option value="music-studies-year-1">Music Year 1</option>
+                <option value="music-studies-year-2">Music Year 2</option>
+                <option value="music-studies-year-3">Music Year 3</option>
+            </select><br>
+
+            <p id="editError" style="color:red;"></p>
 
             <button onclick="updateCalendarEvent()" class="primary-btn">Modify</button>
             <button onclick="closeModify()" class="danger-btn">Close</button>
@@ -36,8 +62,29 @@
             <input id="location" name="location" placeholder="Location" required><br>
             <input id="start-time" type="datetime-local" name="start-time" placeholder="Start Time" required><br>
             <input id="end-time" type="datetime-local" name="end-time" placeholder="End Time" required><br>
-            <input id="classgroup" type="string" name="classgroup" placeholder="Class Group" required><br>
-            <input id="teacher" type="string" name="teacher" placeholder="Teacher" required><br>
+
+            <select id="classgroup" name="classgroup" required>
+                <option value="">Select Class Group</option>
+                <option value="computer-science-year-1">CS Year 1</option>
+                <option value="computer-science-year-2">CS Year 2</option>
+                <option value="computer-science-year-3">CS Year 3</option>
+                <option value="mathematics-year-1">Maths Year 1</option>
+                <option value="mathematics-year-2">Maths Year 2</option>
+                <option value="mathematics-year-3">Maths Year 3</option>
+                <option value="psychology-year-1">Psychology Year 1</option>
+                <option value="psychology-year-2">Psychology Year 2</option>
+                <option value="psychology-year-3">Psychology Year 3</option>
+                <option value="business-year-1">Business Year 1</option>
+                <option value="business-year-2">Business Year 2</option>
+                <option value="business-year-3">Business Year 3</option>
+                <option value="music-studies-year-1">Music Year 1</option>
+                <option value="music-studies-year-2">Music Year 2</option>
+                <option value="music-studies-year-3">Music Year 3</option>
+            </select><br>
+
+            <input id="teacher" type="text" name="teacher" placeholder="Teacher" required><br>
+
+            <p id="createError" style="color:red;"></p>
 
             <button onclick="createCalendarEvent()" class="primary-btn">Create</button>
             <button onclick="closeCreate()" class="danger-btn">Close</button>
@@ -89,8 +136,11 @@
             document.getElementById("eventStart").innerText = new Date(event.start).toLocaleString()
             document.getElementById("eventEnd").innerText = new Date(event.end).toLocaleString()
 
+            const deleteBtn = document.getElementById("deleteBtn")
+            deleteBtn.innerText = "Delete"
+
             document.getElementById("modifyBtn").onclick = () => openModify(selectedEventId)
-            document.getElementById("deleteBtn").onclick = () => deleteEventConfirm()
+            deleteBtn.onclick = () => deleteEventConfirm()
             document.getElementById("qrBtn").onclick = () => qr(selectedEventId)
 
             document.getElementById("eventModal").style.display = "flex"
@@ -167,6 +217,7 @@
         }
 
         function openCreate() {
+            document.getElementById("createError").innerText = ""
             document.getElementById("modal-create").style.display = "flex"
         }
 
@@ -187,6 +238,7 @@
             document.getElementById("edit-start-time").value = toDatetimeLocal(event.startTime)
             document.getElementById("edit-end-time").value = toDatetimeLocal(event.endTime)
             document.getElementById("editClassgroup").value = event.classGroup
+            document.getElementById("editError").innerText = ""
 
             document.getElementById("eventModal").style.display = "none"
             document.getElementById("modal").style.display = "flex"
@@ -198,44 +250,82 @@
         }
 
         async function createCalendarEvent() {
-            const name = document.getElementById("name").value
-            const location = document.getElementById("location").value
+            const name = document.getElementById("name").value.trim()
+            const location = document.getElementById("location").value.trim()
             const startTime = document.getElementById("start-time").value
             const endTime = document.getElementById("end-time").value
             const classGroup = document.getElementById("classgroup").value
-            const teacher = document.getElementById("teacher").value
+            const teacher = document.getElementById("teacher").value.trim()
 
-            await fetch("/api/events/", {
+            document.getElementById("createError").innerText = ""
+
+            if (!name || !location || !startTime || !endTime || !classGroup || !teacher) {
+                document.getElementById("createError").innerText = "All fields are required"
+                return
+            }
+
+            if (new Date(endTime) <= new Date(startTime)) {
+                document.getElementById("createError").innerText = "End time must be after start time"
+                return
+            }
+
+            const res = await fetch("/api/events/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, location, startTime, endTime, classGroup, teacher })
             })
 
-            document.getElementById("modal-create").style.display = "none"
+            const data = await res.json()
 
-            calendar.refetchEvents()
+            if (!res.ok) {
+                document.getElementById("createError").innerText = data.error || "Failed to create event"
+                return
+            }
+
+            document.getElementById("modal-create").style.display = "none"
             window.location.reload()
         }
 
         async function updateCalendarEvent() {
             const id = document.getElementById("id").value
-            const name = document.getElementById("editName").value
-            const location = document.getElementById("editLocation").value
+            const name = document.getElementById("editName").value.trim()
+            const location = document.getElementById("editLocation").value.trim()
             const startTime = document.getElementById("edit-start-time").value
             const endTime = document.getElementById("edit-end-time").value
             const classGroup = document.getElementById("editClassgroup").value
 
-            await fetch("/api/events/" + id, {
+            document.getElementById("editError").innerText = ""
+
+            if (!name || !location || !startTime || !endTime || !classGroup) {
+                document.getElementById("editError").innerText = "All fields are required"
+                return
+            }
+
+            if (new Date(endTime) <= new Date(startTime)) {
+                document.getElementById("editError").innerText = "End time must be after start time"
+                return
+            }
+
+            const res = await fetch("/api/events/" + id, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, location, startTime, endTime, classGroup })
             })
 
-            document.getElementById("modal").style.display = "none"
-            document.getElementById("eventModal").style.display = "flex"
+            const data = await res.json()
 
-            calendar.refetchEvents()
+            if (!res.ok) {
+                document.getElementById("editError").innerText = data.error || "Failed to update event"
+                return
+            }
+
+            document.getElementById("modal").style.display = "none"
             window.location.reload()
+        }
+
+        async function logout() {
+            await fetch("/api/auth/logout", { method: "POST" })
+            window.location.href = "/signin.html"
         }
 
         loadEvents()

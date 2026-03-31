@@ -9,7 +9,10 @@
 
     <body>
         <div class="dashboard">
-            <h1>Admin Panel</h1>
+            <div class="controls">
+                <h1>Admin Panel</h1>
+                <button onclick="logout()" class="danger-btn">Logout</button>
+            </div>
 
             <div class="controls">
                 <input id="search" placeholder="Search by name">
@@ -45,7 +48,7 @@
                 <input id="editUsername" placeholder="Username"><br>
                 <input id="editName" placeholder="Name"><br>
                 <input id="editEmail" placeholder="Email"><br>
-                <input id="editPassword" type="password" placeholder="New Password"><br>
+                <input id="editPassword" type="password" placeholder="New Password (leave blank to keep current)"><br>
 
                 <select id="editRole">
                     <option value="student">Student</option>
@@ -76,6 +79,8 @@
                     <option value="music-studies-year-2">Music Year 2</option>
                     <option value="music-studies-year-3">Music Year 3</option>
                 </select><br>
+
+                <p id="editError" style="color:red;"></p>
 
                 <button onclick="saveUser()" class="primary-btn">Save</button>
                 <button onclick="closeModal()" class="danger-btn">Close</button>
@@ -121,6 +126,8 @@
                     <option value="music-studies-year-2">Music Year 2</option>
                     <option value="music-studies-year-3">Music Year 3</option>
                 </select><br><br>
+
+                <p id="createError" style="color:red;"></p>
 
                 <button onclick="createUser()" class="primary-btn">Create</button>
                 <button onclick="closeCreateModal()" class="danger-btn">Close</button>
@@ -203,12 +210,19 @@
                 pageData.forEach(e => {
                     const card = document.createElement("div")
                     card.className = "admin-attendance-card"
-                    card.innerHTML = `
-                        <h4>${e.name}</h4>
-                        <p>Location: ${e.location}</p>
-                        <p>Start: ${new Date(e.startTime).toLocaleString()}</p>
-                        <p>End: ${new Date(e.endTime).toLocaleString()}</p>
-                    `
+                    card.textContent = ""
+                    const h4 = document.createElement("h4")
+                    h4.textContent = e.name
+                    const loc = document.createElement("p")
+                    loc.textContent = "Location: " + e.location
+                    const start2 = document.createElement("p")
+                    start2.textContent = "Start: " + new Date(e.startTime).toLocaleString()
+                    const end2 = document.createElement("p")
+                    end2.textContent = "End: " + new Date(e.endTime).toLocaleString()
+                    card.appendChild(h4)
+                    card.appendChild(loc)
+                    card.appendChild(start2)
+                    card.appendChild(end2)
                     list.appendChild(card)
                 })
 
@@ -235,6 +249,10 @@
 
             async function loadUsers() {
                 const res = await fetch("/api/users/")
+                if (!res.ok) {
+                    window.location.href = "/signin.html"
+                    return
+                }
                 allUsers = await res.json()
                 filteredUsers = allUsers
                 page = 0
@@ -250,41 +268,47 @@
                 const data = filteredUsers.slice(start, start+pageSize)
 
                 data.forEach((u) => {
+                    const row = document.createElement("tr")
+                    const nameTd = document.createElement("td")
+                    nameTd.textContent = u.name
+                    const emailTd = document.createElement("td")
+                    emailTd.textContent = u.email
+                    const roleTd = document.createElement("td")
+                    roleTd.textContent = u.role
+                    const actionTd = document.createElement("td")
+
+                    const modifyBtn = document.createElement("button")
+                    modifyBtn.textContent = "Modify"
+                    modifyBtn.onclick = () => openModal(u.id)
+
+                    const deleteBtn = document.createElement("button")
+                    deleteBtn.textContent = "Delete"
+                    deleteBtn.onclick = function() { confirmDelete(this, u.id) }
+
+                    actionTd.appendChild(modifyBtn)
+                    actionTd.appendChild(deleteBtn)
+
                     if (u.role === "student") {
-                        const row = document.createElement("tr")
-                        row.innerHTML = `
-                            <td>${u.name}</td>
-                            <td>${u.email}</td>
-                            <td>${u.role}</td>
+                        const calBtn = document.createElement("button")
+                        calBtn.textContent = "Calendar"
+                        calBtn.onclick = () => viewCalendar(u.email, u.classGroup)
 
-                            <td>
-                                <button onclick="openModal('${u.id}')">Modify</button>
-                                <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
-                                <button onclick="viewCalendar('${u.email}','${u.classGroup}')">Calendar</button>
-                                <button onclick="viewAttendance('${u.email}','${u.classGroup}')">Attendance</button>
-                            </td>
-                        `
+                        const attBtn = document.createElement("button")
+                        attBtn.textContent = "Attendance"
+                        attBtn.onclick = () => viewAttendance(u.email, u.classGroup)
 
-                        body.appendChild(row)
-                    } else {
-                        const row = document.createElement("tr")
-                        row.innerHTML = `
-                            <td>${u.name}</td>
-                            <td>${u.email}</td>
-                            <td>${u.role}</td>
-
-                            <td>
-                                <button onclick="openModal('${u.id}')">Modify</button>
-                                <button onclick="confirmDelete(this,'${u.id}')">Delete</button>
-                            </td>
-                        `
-
-                        body.appendChild(row)
+                        actionTd.appendChild(calBtn)
+                        actionTd.appendChild(attBtn)
                     }
+
+                    row.appendChild(nameTd)
+                    row.appendChild(emailTd)
+                    row.appendChild(roleTd)
+                    row.appendChild(actionTd)
+                    body.appendChild(row)
                 })
 
                 const totalPages = Math.ceil(filteredUsers.length / pageSize)
-
                 document.getElementById("page").innerText=`Page ${page+1} / ${Math.max(totalPages, 1)}`
             }
 
@@ -355,14 +379,16 @@
                 data.forEach(e => {
                     const card = document.createElement("div")
                     card.className = "admin-attendance-card"
-                    card.innerHTML = `
-                        <h4>${e.name}</h4>
-                        <p>${new Date(e.start).toLocaleString()}</p>
-                        <p class="${e.attended ? "attended" : "missed"}">
-                            ${e.attended ? "Attended" : "Missed"}
-                        </p>
-                    `
-
+                    const h4 = document.createElement("h4")
+                    h4.textContent = e.name
+                    const dateP = document.createElement("p")
+                    dateP.textContent = new Date(e.start).toLocaleString()
+                    const statusP = document.createElement("p")
+                    statusP.className = e.attended ? "attended" : "missed"
+                    statusP.textContent = e.attended ? "Attended" : "Missed"
+                    card.appendChild(h4)
+                    card.appendChild(dateP)
+                    card.appendChild(statusP)
                     list.appendChild(card)
                 })
             }
@@ -418,13 +444,22 @@
                 document.getElementById("editUsername").value = user.username
                 document.getElementById("editName").value = user.name
                 document.getElementById("editEmail").value = user.email
+                document.getElementById("editPassword").value = ""
                 document.getElementById("editRole").value = user.role
                 document.getElementById("editClassGroup").value = user.classGroup
+                document.getElementById("editError").innerText = ""
 
                 document.getElementById("modal").style.display = "flex"
             }
 
             function openCreateModal() {
+                document.getElementById("username").value = ""
+                document.getElementById("name").value = ""
+                document.getElementById("email").value = ""
+                document.getElementById("password").value = ""
+                document.getElementById("role").value = ""
+                document.getElementById("classGroup").value = "none"
+                document.getElementById("createError").innerText = ""
                 document.getElementById("modal-create").style.display = "flex"
             }
 
@@ -438,12 +473,14 @@
 
             async function saveUser() {
                 const id = document.getElementById("id").value
-                const username = document.getElementById("editUsername").value
-                const name = document.getElementById("editName").value
-                const email = document.getElementById("editEmail").value
+                const username = document.getElementById("editUsername").value.trim()
+                const name = document.getElementById("editName").value.trim()
+                const email = document.getElementById("editEmail").value.trim()
                 const password = document.getElementById("editPassword").value
                 const role = document.getElementById("editRole").value
                 const classGroup = document.getElementById("editClassGroup").value
+
+                document.getElementById("editError").innerText = ""
 
                 const res = await fetch("/api/users/" + id, {
                     method: "PUT",
@@ -458,28 +495,36 @@
                     })
                 })
 
-                if (res.status == 200) {
+                const data = await res.json()
+
+                if (res.ok) {
                     document.getElementById("notification").innerText = "User successfully updated"
                     document.getElementById("modal").style.display="none"
-
                     loadUsers()
                 } else {
-                    document.getElementById("notification").innerText = `Error ${res.status}: ${res.statusText}`
+                    document.getElementById("editError").innerText = data.error || `Error ${res.status}`
                 }
 
-                await new Promise(r => setTimeout(r, 2000));
+                await new Promise(r => setTimeout(r, 2000))
                 document.getElementById("notification").innerText = ""
             }
 
             async function createUser() {
-                const username = document.getElementById("username").value
-                const name = document.getElementById("name").value
-                const email = document.getElementById("email").value
+                const username = document.getElementById("username").value.trim()
+                const name = document.getElementById("name").value.trim()
+                const email = document.getElementById("email").value.trim()
                 const password = document.getElementById("password").value
                 const role = document.getElementById("role").value
                 const classGroup = document.getElementById("classGroup").value
 
-                await fetch("/api/users/", {
+                document.getElementById("createError").innerText = ""
+
+                if (!username || !name || !email || !password || !role) {
+                    document.getElementById("createError").innerText = "All fields are required"
+                    return
+                }
+
+                const res = await fetch("/api/users/", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -492,9 +537,20 @@
                     })
                 })
 
-                document.getElementById("modal-create").style.display = "none"
+                const data = await res.json()
 
+                if (!res.ok) {
+                    document.getElementById("createError").innerText = data.error || "Failed to create user"
+                    return
+                }
+
+                document.getElementById("modal-create").style.display = "none"
                 loadUsers()
+            }
+
+            async function logout() {
+                await fetch("/api/auth/logout", { method: "POST" })
+                window.location.href = "/signin.html"
             }
 
             loadUsers()

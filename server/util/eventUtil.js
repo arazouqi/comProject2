@@ -13,10 +13,11 @@ function formatEvent(event) {
 }
 
 function checkCollisions(events, newEvent) {
-    for (e in events) {
-        if (e.location == newEvent.location) {
-            return ((e.startTime > newEvent.startTime && e.startTime < newEvent.endTime) ||
-                    (newEvent.startTime > e.startTime && newEvent.startTime < e.endTime))
+    for (const e of events) {
+        if (e.location === newEvent.location && e.id !== newEvent.id) {
+            const overlap =
+                (e.startTime < newEvent.endTime && e.endTime > newEvent.startTime)
+            if (overlap) return true
         }
     }
 

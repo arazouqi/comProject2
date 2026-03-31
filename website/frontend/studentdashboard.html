@@ -9,7 +9,10 @@
 
   <body>
     <div class="dashboard">
-        <h1 id="title">My Dashboard</h1>
+        <div class="controls">
+            <h1 id="title">My Dashboard</h1>
+            <button onclick="logout()" class="danger-btn">Logout</button>
+        </div>
 
         <div id="calendarDiv" class="calendar-page" style="display: none;">
             <div class="top-bar">
@@ -76,42 +79,42 @@
                 <button id="qrBtn" class="primary-btn"></button>
                 <button onclick="closeEventModal()" class="secondary-btn">Close</button>
             </div>
+            <p id="checkinError" style="color:red; margin-top:8px;"></p>
         </div>
     </div>
 
     <script>
-        function toDatetimeLocal(date) {
-            const d = new Date(date)
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
-            return d.toISOString().slice(0,16)
-        }
-
         let calendar
+        let calendarInitialized = false
         let selectedEventId = null
         let email
         let classgroup
+        let allEvents = []
 
         function openEventModal(event) {
             selectedEventId = event.id
 
-            document.getElementById("eventTitle").innerText = event.title
-            document.getElementById("eventLocation").innerText = event.extendedProps.location
-            document.getElementById("eventClass").innerText = event.extendedProps.classGroup
-            document.getElementById("eventStart").innerText = new Date(event.start).toLocaleString()
-            document.getElementById("eventEnd").innerText = new Date(event.end).toLocaleString()
+            document.getElementById("eventTitle").textContent = event.title
+            document.getElementById("eventLocation").textContent = event.extendedProps.location
+            document.getElementById("eventClass").textContent = event.extendedProps.classGroup
+            document.getElementById("eventStart").textContent = new Date(event.start).toLocaleString()
+            document.getElementById("eventEnd").textContent = new Date(event.end).toLocaleString()
+            document.getElementById("checkinError").textContent = ""
 
-            console.log(event.extendedProps.attendees.includes(email))
+            const qrBtn = document.getElementById("qrBtn")
 
             if ((new Date() > new Date(event.end))) {
-                document.getElementById("qrBtn").innerText = "Attendance Closed"
-                document.getElementById("qrBtn").className = "secondary-btn"
+                qrBtn.textContent = "Attendance Closed"
+                qrBtn.className = "secondary-btn"
+                qrBtn.onclick = null
             } else if (event.extendedProps.attendees.includes(email)) {
-                document.getElementById("qrBtn").innerText = "Checked In"
-                document.getElementById("qrBtn").className = "secondary-btn"
+                qrBtn.textContent = "Checked In"
+                qrBtn.className = "secondary-btn"
+                qrBtn.onclick = null
             } else {
-                document.getElementById("qrBtn").innerText = "Check In"
-                document.getElementById("qrBtn").className = "primary-btn"
-                document.getElementById("qrBtn").onclick = () => checkIn(selectedEventId)
+                qrBtn.textContent = "Check In"
+                qrBtn.className = "primary-btn"
+                qrBtn.onclick = () => checkIn(selectedEventId)
             }
 
             document.getElementById("eventModal").style.display = "flex"
@@ -123,16 +126,22 @@
 
         async function loadPage() {
             const loggedIn = await fetch("/api/auth/getloggedin")
+            if (!loggedIn.ok) {
+                window.location.href = "/signin.html"
+                return
+            }
             const data = await loggedIn.json()
             email = data.email
             classgroup = data.classgroup
+
+            await Promise.all([loadEvents(), loadDashboard()])
         }
 
         async function loadEvents() {
             const res = await fetch("/api/events/")
-            const events = await res.json()
+            allEvents = await res.json()
 
-            const filteredEvents = events.filter(f => f.classGroup === classgroup)
+            const filteredEvents = allEvents.filter(f => f.classGroup === classgroup)
 
             const formattedEvents = filteredEvents.map(e => ({
                 id: e.id,
@@ -159,6 +168,8 @@
                     openEventModal(info.event)
                 },
             })
+
+            calendarInitialized = true
         }
 
         async function loadAttendance() {
@@ -169,8 +180,6 @@
             const now = new Date()
             let counted = 0
             let attended = 0
-
-            console.log(filtered)
 
             const container = document.getElementById("attendanceList")
             container.innerHTML = ""
@@ -184,13 +193,26 @@
                     const status = attendedEvent ? "Attended" : "Missed"
                     const card = document.createElement("div")
                     card.className = "attendance-card"
-                    card.innerHTML = `
-                        <h4>${e.name}</h4>
-                        <p>Location: ${e.location}</p>
-                        <p>Start: ${new Date(e.startTime).toLocaleString()}</p>
-                        <p>End: ${new Date(e.endTime).toLocaleString()}</p>
-                        <p>Status: <b class="${status === "Attended" ? "attended" : "missed"}">${status}</b></p>
-                    `
+                    card.innerHTML = ""
+                    const h4 = document.createElement("h4")
+                    h4.textContent = e.name
+                    const locP = document.createElement("p")
+                    locP.textContent = "Location: " + e.location
+                    const startP = document.createElement("p")
+                    startP.textContent = "Start: " + new Date(e.startTime).toLocaleString()
+                    const endP = document.createElement("p")
+                    endP.textContent = "End: " + new Date(e.endTime).toLocaleString()
+                    const statusP = document.createElement("p")
+                    statusP.textContent = "Status: "
+                    const statusB = document.createElement("b")
+                    statusB.className = attendedEvent ? "attended" : "missed"
+                    statusB.textContent = status
+                    statusP.appendChild(statusB)
+                    card.appendChild(h4)
+                    card.appendChild(locP)
+                    card.appendChild(startP)
+                    card.appendChild(endP)
+                    card.appendChild(statusP)
                     container.appendChild(card)
                 }
             })
@@ -198,19 +220,19 @@
             const missed = counted - attended
             const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
 
-            document.getElementById("attendancePercentage").innerText =
+            document.getElementById("attendancePercentage").textContent =
                 `Attendance Percentage: ${percent}%`
-            document.getElementById("countedEvents").innerText = counted
-            document.getElementById("attendedEvents").innerText = attended
-            document.getElementById("missedEvents").innerText = missed
+            document.getElementById("countedEvents").textContent = counted
+            document.getElementById("attendedEvents").textContent = attended
+            document.getElementById("missedEvents").textContent = missed
         }
 
         async function loadDashboard() {
             const res = await fetch("/api/events/")
             const events = await res.json()
 
-            document.getElementById("studentEmail").innerText = email
-            document.getElementById("studentClass").innerText = classgroup
+            document.getElementById("studentEmail").textContent = email
+            document.getElementById("studentClass").textContent = classgroup
 
             const filtered = events.filter(e => e.classGroup === classgroup)
             const now = new Date()
@@ -233,28 +255,32 @@
 
                 if (start > now) {
                     const item = document.createElement("p")
-                    item.innerText =
+                    item.textContent =
                         `${e.name} • ${start.toLocaleDateString()} ${start.toLocaleTimeString()}`
-
                     upcomingContainer.appendChild(item)
                 }
             })
 
             const percent = counted === 0 ? 0 : Math.round((attended / counted) * 100)
 
-            document.getElementById("dashboardAttendance").innerText = percent + "%"
-            document.getElementById("dashboardAttended").innerText = attended
+            document.getElementById("dashboardAttendance").textContent = percent + "%"
+            document.getElementById("dashboardAttended").textContent = attended
         }
 
         async function checkIn(id) {
-            if (document.getElementById("qrBtn").innerText !== "Check In") return
+            const qrBtn = document.getElementById("qrBtn")
+            if (qrBtn.textContent !== "Check In") return
 
-            const eventData = await fetch("/api/events/" + id, {
-                method: "GET"
-            })
-            const code = await (await eventData.json()).qrCode
+            document.getElementById("checkinError").textContent = ""
 
-            console.log(code, email)
+            const eventData = await fetch("/api/events/" + id)
+            const eventJson = await eventData.json()
+            const code = eventJson.qrCode
+
+            if (!code) {
+                document.getElementById("checkinError").textContent = "No QR code generated for this event yet"
+                return
+            }
 
             const res = await fetch("/api/events/checkin", {
                 method: "POST",
@@ -263,28 +289,30 @@
             })
 
             const data = await res.json()
-            console.log(data)
 
-            if (data.success == true) {
-                document.getElementById("qrBtn").innerText = "Checked In"
-                document.getElementById("qrBtn").className = "secondary-btn"
+            if (data.success) {
+                qrBtn.textContent = "Checked In"
+                qrBtn.className = "secondary-btn"
+                qrBtn.onclick = null
+            } else {
+                document.getElementById("checkinError").textContent = data.error || "Check-in failed"
             }
         }
 
         function openCalendar() {
             document.getElementById("main").style.display = "none"
             document.getElementById("calendarDiv").style.display = "flex"
-            document.getElementById("title").innerText = "My Calendar"
+            document.getElementById("title").textContent = "My Calendar"
 
-            loadEvents()
-            calendar.refetchEvents()
-            calendar.render()
+            if (calendarInitialized) {
+                calendar.render()
+            }
         }
 
         function openAttendance() {
             document.getElementById("main").style.display = "none"
             document.getElementById("attendance").style.display = "flex"
-            document.getElementById("title").innerText = "My Attendance"
+            document.getElementById("title").textContent = "My Attendance"
 
             loadAttendance()
         }
@@ -293,12 +321,15 @@
             document.getElementById("attendance").style.display = "none"
             document.getElementById("calendarDiv").style.display = "none"
             document.getElementById("main").style.display = "flex"
-            document.getElementById("title").innerText = "My Dashboard"
+            document.getElementById("title").textContent = "My Dashboard"
+        }
+
+        async function logout() {
+            await fetch("/api/auth/logout", { method: "POST" })
+            window.location.href = "/signin.html"
         }
 
         loadPage()
-        loadEvents()
-        loadDashboard()
     </script>
   </body>
 </html>

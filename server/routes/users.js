@@ -80,9 +80,9 @@ router.put("/:id", async (req, res) => {
     try {
         const { username, name, email, password, role, classGroup } = req.body
 
-        if (!username || !name || !email || !password || !role || !classGroup) {
+        if (!username || !name || !email || !role || !classGroup) {
             return res.status(400).json({
-                error: "Username, name, email, password, role, and classGroup are required"
+                error: "Username, name, email, role, and classGroup are required"
             })
         }
 
@@ -104,15 +104,21 @@ router.put("/:id", async (req, res) => {
             return res.status(400).json({ error: "Email already exists" })
         }
 
-        const updatedUser = await Users.findByIdAndUpdate(
-            req.params.id,
-            { username, name, email, password, role, classGroup },
-            { returnDocument: "after" }
-        )
-
-        if (!updatedUser) {
+        const currentUser = await Users.findById(req.params.id)
+        if (!currentUser) {
             return res.status(404).json({ error: "User not found" })
         }
+
+        const updateFields = { username, name, email, role, classGroup }
+        if (password && password.trim() !== "") {
+            updateFields.password = password
+        }
+
+        const updatedUser = await Users.findByIdAndUpdate(
+            req.params.id,
+            updateFields,
+            { returnDocument: "after" }
+        )
 
         res.json(formatUser(updatedUser))
     } catch (err) {

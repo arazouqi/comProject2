@@ -4,7 +4,6 @@ function formatUser(user) {
         username: user.username || "",
         name: user.name || "",
         email: user.email || "",
-        password: user.password || "",
         role: user.role || "student",
         classGroup: user.classGroup || "none",
         attendance: user.attendance || [],

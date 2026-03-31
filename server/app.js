@@ -9,6 +9,18 @@ const eventRoutes = require("./routes/events")
 
 const connectDB = require("./util/database")
 
+function requireRole(...roles) {
+    return (req, res, next) => {
+        if (!req.session.user) {
+            return res.status(401).json({ error: "Not authenticated" })
+        }
+        if (roles.length && !roles.includes(req.session.role)) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+        next()
+    }
+}
+
 const app = express()
 
 connectDB()
@@ -54,9 +66,15 @@ app.get("/studentdashboard", (req, res) => {
     res.sendFile(path.join(__dirname, "../website/frontend/studentdashboard.html"))
 })
 
+// logout
+app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy()
+    res.json({ success: true })
+})
+
 // attach route files
 app.use("/api/auth", authRoutes)
-app.use("/api/users", userRoutes)
+app.use("/api/users", requireRole("admin"), userRoutes)
 app.use("/api/events", eventRoutes)
 
 module.exports = app

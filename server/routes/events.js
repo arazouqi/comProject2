@@ -174,6 +174,18 @@ router.post("/checkin", async (req, res) => {
             return res.status(404).json({ error: "Invalid QR code" })
         }
 
+        const now = new Date()
+        const start = new Date(event.startTime)
+        const end = new Date(event.endTime)
+
+        if (now < start) {
+            return res.status(400).json({ error: "This event has not started yet" })
+        }
+
+        if (now > end) {
+            return res.status(400).json({ error: "This event has already ended" })
+        }
+
         if (event.attendees.includes(email)) {
             return res.status(400).json({
                 error: "You have already checked in to this event"
